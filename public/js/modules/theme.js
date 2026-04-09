@@ -16,9 +16,9 @@ export function initTheme() {
         themeBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
     }
 
-    // Restore saved font size
-    const savedFont = localStorage.getItem(FONT_KEY);
-    if (savedFont) applyFont(savedFont);
+    // Restore saved font size (default to medium / A++)
+    const savedFont = localStorage.getItem(FONT_KEY) || 'medium';
+    applyFont(savedFont);
 
     themeBtn.addEventListener('click', () => {
         const isDark = root.getAttribute('data-theme') === 'dark';
@@ -37,8 +37,8 @@ export function initTheme() {
 }
 
 function applyFont(size) {
-    const sizes = { small: '14px', medium: '18px', large: '22px' };
-    document.documentElement.style.fontSize = sizes[size] || '16px';
+    const sizes = { small: '18px', medium: '22px', large: '26px' };
+    document.documentElement.style.fontSize = sizes[size] || '22px';
     ['font-sm', 'font-md', 'font-lg'].forEach((id, i) => {
         document.getElementById(id)?.classList.toggle(
             'active', ['small', 'medium', 'large'][i] === size
