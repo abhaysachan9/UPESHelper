@@ -77,18 +77,22 @@ async function reindexPage(url) {
         console.log('   ✅ Old vectors deleted');
     }
 
-    // Step 4: Chunk new content and upsert
+    // Step 4: Chunk new content and upsert (with title context)
     const textChunks = chunkText(page.text);
-    const newChunks = textChunks.map((chunk, i) => ({
-        id: `${encodeURIComponent(url)}_chunk_${i}`,
-        text: chunk,
-        metadata: {
-            url: page.url,
-            title: page.title,
-            chunkIndex: i,
-            crawledAt: page.crawledAt,
-        },
-    }));
+    const newChunks = textChunks.map((chunk, i) => {
+        const contextPrefix = `[${page.title}]\n`;
+        return {
+            id: `${encodeURIComponent(url)}_chunk_${i}`,
+            text: contextPrefix + chunk,
+            metadata: {
+                url: page.url,
+                title: page.title,
+                chunkIndex: i,
+                totalChunks: textChunks.length,
+                crawledAt: page.crawledAt,
+            },
+        };
+    });
 
     console.log(`   ☁️  Upserting ${newChunks.length} new vectors...`);
     await upsertChunks(newChunks);

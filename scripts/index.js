@@ -63,18 +63,21 @@ async function index() {
 
     const pages = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
 
-    // Build all chunks
+    // Build all chunks with page-level context prepended
     const allChunks = [];
     for (const page of pages) {
         const textChunks = chunkText(page.text);
         textChunks.forEach((chunk, i) => {
+            // Prepend page title so every chunk has page-level context for retrieval
+            const contextPrefix = `[${page.title}]\n`;
             allChunks.push({
                 id: `${encodeURIComponent(page.url)}_chunk_${i}`,
-                text: chunk,
+                text: contextPrefix + chunk,
                 metadata: {
                     url: page.url,
                     title: page.title,
                     chunkIndex: i,
+                    totalChunks: textChunks.length,
                     crawledAt: page.crawledAt,
                 },
             });

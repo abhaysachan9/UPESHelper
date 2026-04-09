@@ -111,12 +111,17 @@ a {
   gap: 0.6rem;
   text-decoration: none;
   color: var(--text);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .topbar-logo {
-  height: 2rem;
+  max-height: 2rem;
   width: auto;
-  max-width: 100%;
+  max-width: 140px;
+  object-fit: contain;
+  flex-shrink: 1;
+  min-width: 0;
   transition: filter 0.3s var(--ease);
 }
 
@@ -226,10 +231,12 @@ body:has(> .chat-view.active) {
 }
 
 .landing-logo {
-  height: 5rem;
+  display: block;
+  max-height: 5rem;
   width: auto;
-  max-width: 100%;
-  margin-bottom: 1.25rem;
+  max-width: 90%;
+  margin: 0 auto 1.25rem;
+  object-fit: contain;
   filter: drop-shadow(0 6px 18px rgba(79, 114, 184, 0.2));
   transition: filter 0.3s var(--ease);
 }
@@ -1025,7 +1032,8 @@ body:has(> .landing:not(.hidden)) > .input-bar {
   }
 
   .landing-logo {
-    height: 3.75rem;
+    max-height: 3.25rem;
+    max-width: 80%;
   }
 
   .landing-subtitle {
@@ -1077,8 +1085,17 @@ body:has(> .landing:not(.hidden)) > .input-bar {
     display: none;
   }
 
+  .topbar-logo {
+    max-width: 120px;
+  }
+
   .accessibility-controls {
     display: none;
+  }
+
+  .landing-logo {
+    max-height: 2.75rem;
+    max-width: 70%;
   }
 }
 
