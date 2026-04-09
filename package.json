@@ -1,0 +1,25 @@
+{
+  "name": "upes-helper",
+  "version": "1.0.0",
+  "description": "UPES RAG Chatbot using Gemini API and Upstash Vector DB",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js & sleep 2 && browser-sync start --proxy 'http://localhost:3000' --files 'public/**/*' --port 3001 --no-open",
+    "build": "echo 'Building for Netlify: No compilation needed for vanilla JS frontend.'",
+    "crawl": "node scripts/crawl.js",
+    "index": "node scripts/index.js",
+    "clear": "node scripts/clearIndex.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@upstash/vector": "^1.1.5",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "browser-sync": "^3.0.4"
+  }
+}
