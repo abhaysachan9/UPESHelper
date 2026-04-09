@@ -21,24 +21,26 @@
 
   <!-- ─── Top Bar ────────────────────────────────────────────────── -->
   <header class="topbar" id="topbar">
-    <a class="topbar-brand" href="/" aria-label="UPES Helper Home">
-      <img src="/assets/upesimg.svg" alt="UPES" class="topbar-logo" />
-      <span class="topbar-title"><strong>UNI</strong>helper</span>
-    </a>
+    <div class="topbar-inner">
+      <a class="topbar-brand" href="/" aria-label="UPES Helper Home">
+        <img src="/assets/upesimg.svg" alt="UPES" class="topbar-logo" />
+        <span class="topbar-title"><strong>UNI</strong>helper</span>
+      </a>
 
-    <div class="topbar-actions">
-      <div class="accessibility-controls" role="group" aria-label="Font size">
-        <button onclick="setFontSize('small')" id="font-sm" title="Normal">A</button>
-        <button onclick="setFontSize('medium')" id="font-md" title="Large">A++</button>
-        <button onclick="setFontSize('large')" id="font-lg" title="XL">A+++</button>
+      <div class="topbar-actions">
+        <div class="accessibility-controls" role="group" aria-label="Font size">
+          <button onclick="setFontSize('small')" id="font-sm" title="Normal">A</button>
+          <button onclick="setFontSize('medium')" id="font-md" title="Large">A+</button>
+          <button onclick="setFontSize('large')" id="font-lg" title="XL">A++</button>
+        </div>
+        <button id="theme-btn" class="icon-btn" title="Toggle theme" aria-label="Toggle dark mode">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button id="clear-btn" class="icon-btn" title="New conversation" aria-label="Start new conversation"
+          style="display:none">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
       </div>
-      <button id="theme-btn" class="icon-btn" title="Toggle theme" aria-label="Toggle dark mode">
-        <i class="fa-solid fa-moon"></i>
-      </button>
-      <button id="clear-btn" class="icon-btn" title="New conversation" aria-label="Start new conversation"
-        style="display:none">
-        <i class="fa-solid fa-pen-to-square"></i>
-      </button>
     </div>
   </header>
 
