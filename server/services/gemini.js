@@ -17,10 +17,7 @@ function getModel() {
     }
 
     _genAI = new GoogleGenerativeAI(apiKey);
-    _model = _genAI.getGenerativeModel({
-        model: 'gemini-3.1-flash-lite-preview',
-        tools: [{ googleSearchRetrieval: {} }],
-    });
+    _model = _genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
     return _model;
 }
 
@@ -33,12 +30,11 @@ function buildPrompt(question, contextChunks) {
         .join('\n\n');
 
     return `You are UPES Helper — a smart university assistant for UPES (University of Petroleum and Energy Studies). 
-Your role is to answer student questions using the provided knowledge base context and Google Search when needed.
+Your role is to answer student questions ONLY based on the provided knowledge base context below.
 
 RULES:
-- Primarily answer from the provided knowledge base context below.
-- If the context doesn't contain enough information, you may use Google Search to find the answer from official UPES sources.
-- If neither the context nor Google Search has the answer, say: "I don't have enough information about this. Please contact UPES directly at admissions@upes.ac.in or visit upes.ac.in."
+- Answer ONLY from the provided context. Do NOT use outside knowledge.
+- If the context doesn't contain enough information to answer, say: "I don't have enough information about this in my knowledge base. Please contact UPES directly at admissions@upes.ac.in or visit upes.ac.in."
 - Be highly detailed, thorough, and provide comprehensive information from the context. Do not be vague or brief! 
 - Format your answer in clear, readable markdown. Use bullet points and headers to organize the response extensively where applicable.
 - Do NOT mention "context", "documents", or "chunks" in your response.
