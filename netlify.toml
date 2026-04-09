@@ -13,6 +13,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/call-enabled"
+  to = "/.netlify/functions/call-enabled"
+  status = 200
+
+[[redirects]]
+  from = "/api/call-config"
+  to = "/.netlify/functions/call-config"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

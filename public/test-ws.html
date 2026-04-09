@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html><head><title>WS Test</title></head>
+<body>
+<h2>WebSocket Diagnostic</h2>
+<button id="run">Run Tests</button>
+<pre id="log" style="white-space:pre-wrap;font-size:13px;max-height:80vh;overflow:auto;"></pre>
+<script>
+const log = document.getElementById('log');
+function L(msg) { log.textContent += msg + '\n'; console.log(msg); }
+
+document.getElementById('run').onclick = async () => {
+    log.textContent = '';
+    L('Fetching call config...');
+    try {
+        const res = await fetch('/api/call-config');
+        const cfg = await res.json();
+        L('Token: ' + (cfg.token || 'NONE').substring(0, 40) + '...');
+        L('WS URL: ' + cfg.wsUrl);
+        L('Model: ' + cfg.model);
+
+        // Test A: encoded token, WITH setup
+        L('\n=== Test A: encoded token + setup msg ===');
+        await testWs(cfg.wsUrl + '?access_token=' + encodeURIComponent(cfg.token), cfg.model, true);
+
+        // Fetch fresh token for Test B
+        const res2 = await fetch('/api/call-config');
+        const cfg2 = await res2.json();
+
+        L('\n=== Test B: encoded token, NO setup msg ===');
+        await testWs(cfg2.wsUrl + '?access_token=' + encodeURIComponent(cfg2.token), cfg2.model, false);
+
+        // Fetch fresh token for Test C
+        const res3 = await fetch('/api/call-config');
+        const cfg3 = await res3.json();
+
+        L('\n=== Test C: raw token + setup msg ===');
+        await testWs(cfg3.wsUrl + '?access_token=' + cfg3.token, cfg3.model, true);
+
+    } catch (e) { L('ERROR: ' + e.message); }
+};
+
+function testWs(url, model, sendSetup) {
+    return new Promise(resolve => {
+        L('Connecting: ' + url.substring(0, 100) + '...');
+        const ws = new WebSocket(url);
+        ws.binaryType = 'arraybuffer';
+
+        const t = setTimeout(() => {
+            L('TIMEOUT (10s). readyState=' + ws.readyState);
+            ws.close();
+            resolve();
+        }, 10000);
+
+        ws.onopen = () => {
+            L('OPEN (readyState=' + ws.readyState + ')');
+            if (sendSetup) {
+                const msg = JSON.stringify({
+                    setup: { model: 'models/' + model, generationConfig: { responseModalities: ['AUDIO'] } }
+                });
+                L('Sending: ' + msg);
+                ws.send(msg);
+            } else {
+                L('(not sending setup, waiting...)');
+            }
+        };
+
+        ws.onmessage = (e) => {
+            let text;
+            try {
+                text = typeof e.data === 'string' ? e.data : new TextDecoder().decode(e.data);
+            } catch { text = '[binary, len=' + e.data.byteLength + ']'; }
+            L('MSG: ' + text.substring(0, 500));
+            const msg = JSON.parse(text);
+            if (msg.setupComplete) { L('SUCCESS: setupComplete!'); clearTimeout(t); ws.close(); resolve(); }
+            if (msg.error) { L('ERROR from server: ' + JSON.stringify(msg.error)); clearTimeout(t); ws.close(); resolve(); }
+        };
+
+        ws.onerror = (e) => { L('WS ERROR event'); clearTimeout(t); resolve(); };
+        ws.onclose = (e) => { L('CLOSE code=' + e.code + ' reason="' + (e.reason||'') + '" clean=' + e.wasClean); clearTimeout(t); resolve(); };
+    });
+}
+</script>
+</body>
+</html>
