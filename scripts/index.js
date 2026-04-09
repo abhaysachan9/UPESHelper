@@ -2,6 +2,10 @@
  * scripts/index.js
  * Reads crawled-data/pages.json, chunks the content, and upserts
  * into Upstash Vector DB.
+ *
+ * Supports resuming: if indexing is interrupted (e.g. daily write limit),
+ * re-running will skip already-indexed chunks and continue from where it stopped.
+ *
  * Usage: node scripts/index.js
  */
 
@@ -9,6 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { upsertChunks } from '../server/services/vectorDb.js';
+import { chunkText } from '../server/utils/chunker.js';
 
 // ─── Load env ─────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,34 +34,22 @@ if (fs.existsSync(envPath)) {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
-const CHUNK_SIZE = 500;   // characters per chunk
-const CHUNK_OVERLAP = 100;  // overlap to preserve context at boundaries
+const PROGRESS_FILE = path.join(rootDir, 'crawled-data', 'index-progress.json');
 
-// ─── Chunker ──────────────────────────────────────────────────────────────────
+// ─── Progress helpers ─────────────────────────────────────────────────────────
 
-/**
- * Split text into overlapping chunks of roughly CHUNK_SIZE characters,
- * trying to break at sentence boundaries.
- */
-function chunkText(text, chunkSize = CHUNK_SIZE, overlap = CHUNK_OVERLAP) {
-    const sentences = text.match(/[^.!?\n]+[.!?\n]+/g) || [text];
-    const chunks = [];
-    let current = '';
+function loadProgress() {
+    if (!fs.existsSync(PROGRESS_FILE)) return new Set();
+    const ids = JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf-8'));
+    return new Set(ids);
+}
 
-    for (const sentence of sentences) {
-        if ((current + sentence).length > chunkSize && current.length > 0) {
-            chunks.push(current.trim());
-            // Keep overlap from end of current chunk
-            const words = current.split(' ');
-            const overlapWords = words.slice(Math.max(0, words.length - Math.ceil(overlap / 5)));
-            current = overlapWords.join(' ') + ' ' + sentence;
-        } else {
-            current += sentence;
-        }
-    }
+function saveProgress(indexedIds) {
+    fs.writeFileSync(PROGRESS_FILE, JSON.stringify([...indexedIds]));
+}
 
-    if (current.trim()) chunks.push(current.trim());
-    return chunks;
+function clearProgress() {
+    if (fs.existsSync(PROGRESS_FILE)) fs.unlinkSync(PROGRESS_FILE);
 }
 
 // ─── Indexer ──────────────────────────────────────────────────────────────────
@@ -69,10 +62,9 @@ async function index() {
     }
 
     const pages = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
-    console.log(`\n📚  Indexing ${pages.length} pages into Upstash Vector DB...\n`);
 
+    // Build all chunks
     const allChunks = [];
-
     for (const page of pages) {
         const textChunks = chunkText(page.text);
         textChunks.forEach((chunk, i) => {
@@ -89,12 +81,43 @@ async function index() {
         });
     }
 
-    console.log(`   Total chunks to index: ${allChunks.length}`);
+    // Check what's already indexed (from previous interrupted run)
+    const indexedIds = loadProgress();
+    const remainingChunks = allChunks.filter(c => !indexedIds.has(c.id));
+
+    console.log(`\n📚  Indexing ${pages.length} pages into Upstash Vector DB...`);
+    console.log(`   Total chunks: ${allChunks.length}`);
+
+    if (indexedIds.size > 0) {
+        console.log(`   ✅ Already indexed (from previous run): ${indexedIds.size}`);
+        console.log(`   ⏳ Remaining to index: ${remainingChunks.length}`);
+    }
+
+    if (remainingChunks.length === 0) {
+        console.log(`\n✅  All ${allChunks.length} chunks are already indexed! Nothing to do.`);
+        clearProgress();
+        return;
+    }
+
     console.log('   Upserting to Upstash...\n');
 
-    await upsertChunks(allChunks);
+    try {
+        await upsertChunks(remainingChunks, (batch) => {
+            for (const chunk of batch) indexedIds.add(chunk.id);
+            saveProgress(indexedIds);
+        }, indexedIds.size);
 
-    console.log(`\n✅  Indexing complete! ${allChunks.length} chunks are now in the vector DB.\n`);
+        // All done — clean up progress file
+        clearProgress();
+        console.log(`\n✅  Indexing complete! ${allChunks.length} chunks are now in the vector DB.\n`);
+    } catch (err) {
+        const indexed = indexedIds.size;
+        const remaining = allChunks.length - indexed;
+        console.error(`\n❌  Indexing stopped: ${err.message}`);
+        console.log(`\n📊  Progress saved! ${indexed}/${allChunks.length} chunks indexed (${remaining} remaining).`);
+        console.log('   Run "npm run index" again to resume from where it stopped.\n');
+        process.exit(1);
+    }
 }
 
 index().catch(err => {

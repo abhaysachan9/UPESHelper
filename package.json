@@ -10,6 +10,8 @@
     "build": "echo 'Building for Netlify: No compilation needed for vanilla JS frontend.'",
     "crawl": "node scripts/crawl.js",
     "index": "node scripts/index.js",
+    "index:status": "node scripts/indexStatus.js",
+    "reindex": "node scripts/reindexPage.js",
     "clear": "node scripts/clearIndex.js"
   },
   "dependencies": {

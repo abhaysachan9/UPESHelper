@@ -36,7 +36,11 @@ if (fs.existsSync(envPath)) {
 const CRAWL_MODE = process.env.CRAWL_MODE || (process.env.SITEMAP_URL ? 'sitemap' : 'urllist');
 const SITEMAP_URL = process.env.SITEMAP_URL || 'https://www.upes.ac.in/sitemap.xml';
 const MAX_PAGES = parseInt(process.env.MAX_PAGES || '100', 10);
+const CONCURRENCY = Math.max(1, parseInt(process.env.CONCURRENCY || '1', 10));
 const DELAY_MS = 1200;
+const SITEMAP_TIMEOUT = 45_000;
+const PAGE_TIMEOUT = 20_000;
+const MAX_RETRIES = 3;
 const OUTPUT_DIR = path.join(rootDir, 'crawled-data');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'pages.json');
 
@@ -69,13 +73,33 @@ function extractText($) {
 
 // ─── Mode 1: Sitemap ──────────────────────────────────────────────────────────
 
+async function fetchWithRetry(url, opts, timeout = SITEMAP_TIMEOUT, retries = MAX_RETRIES) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const res = await fetch(url, { ...opts, signal: AbortSignal.timeout(timeout) });
+            if (!res.ok) {
+                console.warn(`   ⚠️  HTTP ${res.status} for ${url} (attempt ${attempt}/${retries})`);
+                if (attempt < retries) { await sleep(2000 * attempt); continue; }
+                return null;
+            }
+            return res;
+        } catch (err) {
+            console.warn(`   ⚠️  ${err.message} for ${url} (attempt ${attempt}/${retries})`);
+            if (attempt < retries) { await sleep(2000 * attempt); continue; }
+            return null;
+        }
+    }
+    return null;
+}
+
 async function fetchUrlsFromSitemap(sitemapUrl, visited = new Set(), depth = 0) {
-    if (depth > 2) return []; // Max sitemap nesting depth
-    console.log(`   📄 Reading sitemap: ${sitemapUrl}`);
+    if (depth > 4) return [];
+    console.log(`   📄 Reading sitemap (depth ${depth}): ${sitemapUrl}`);
+
+    const res = await fetchWithRetry(sitemapUrl, FETCH_OPTS);
+    if (!res) return [];
 
     try {
-        const res = await fetch(sitemapUrl, { ...FETCH_OPTS, signal: AbortSignal.timeout(15_000) });
-        if (!res.ok) { console.warn(`   ⚠️  Sitemap HTTP ${res.status}`); return []; }
         const xml = await res.text();
         const $ = cheerio.load(xml, { xmlMode: true });
 
@@ -93,30 +117,30 @@ async function fetchUrlsFromSitemap(sitemapUrl, visited = new Set(), depth = 0) 
             if (loc) urls.push({ type: 'page', url: loc });
         });
 
+        const subSitemaps = urls.filter(u => u.type === 'sitemap');
+        const directPages = urls.filter(u => u.type === 'page').map(u => u.url);
+        console.log(`   ↳ Found ${directPages.length} page URLs + ${subSitemaps.length} sub-sitemaps`);
+
         // Recursively fetch nested sitemaps
-        const pages = [];
-        for (const item of urls) {
-            if (item.type === 'sitemap') {
-                const nested = await fetchUrlsFromSitemap(item.url, visited, depth + 1);
-                pages.push(...nested);
-            } else {
-                pages.push(item.url);
-            }
+        const pages = [...directPages];
+        for (const item of subSitemaps) {
+            const nested = await fetchUrlsFromSitemap(item.url, visited, depth + 1);
+            pages.push(...nested);
         }
         return pages;
     } catch (err) {
-        console.warn(`   ❌ Sitemap error: ${err.message}`);
+        console.warn(`   ❌ Sitemap parse error: ${err.message}`);
         return [];
     }
 }
 
 // ─── Page Scraper ─────────────────────────────────────────────────────────────
 
-async function scrapePage(url) {
-    try {
-        const res = await fetch(url, { ...FETCH_OPTS, signal: AbortSignal.timeout(12_000) });
-        if (!res.ok) return null;
+export async function scrapePage(url) {
+    const res = await fetchWithRetry(url, FETCH_OPTS, PAGE_TIMEOUT, 2);
+    if (!res) return null;
 
+    try {
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('html')) return null;
 
@@ -139,20 +163,26 @@ async function crawl() {
     if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
     console.log(`\n🕷️  Crawler starting — Mode: ${CRAWL_MODE.toUpperCase()}`);
-    console.log(`   Max pages: ${MAX_PAGES}\n`);
+    console.log(`   Max pages: ${MAX_PAGES}, Concurrency: ${CONCURRENCY}\n`);
 
     let targetUrls = [];
 
     if (CRAWL_MODE === 'sitemap') {
         console.log(`📡 Fetching sitemap from: ${SITEMAP_URL}`);
         const allUrls = await fetchUrlsFromSitemap(SITEMAP_URL);
-        // Filter for relevant UPES pages
-        targetUrls = allUrls
-            .filter(u => /upes\.ac\.in/i.test(u))
-            .filter(u => !/\.(pdf|png|jpg|jpeg|gif|svg|zip|docx?|pptx?|mp4|webp)$/i.test(u))
-            .filter(u => !/login|logout|register|cart|checkout|wp-admin/i.test(u))
-            .slice(0, MAX_PAGES);
-        console.log(`   Found ${targetUrls.length} URLs in sitemap\n`);
+        console.log(`\n   📊 Total URLs from sitemap: ${allUrls.length}`);
+
+        const afterDomain = allUrls.filter(u => /upes\.ac\.in/i.test(u));
+        console.log(`   After domain filter: ${afterDomain.length}`);
+
+        const afterFileType = afterDomain.filter(u => !/\.(pdf|png|jpg|jpeg|gif|svg|zip|docx?|pptx?|mp4|webp)$/i.test(u));
+        console.log(`   After file-type filter: ${afterFileType.length}`);
+
+        const afterRouteFilter = afterFileType.filter(u => !/login|logout|register|cart|checkout|wp-admin/i.test(u));
+        console.log(`   After route filter: ${afterRouteFilter.length}`);
+
+        targetUrls = afterRouteFilter.slice(0, MAX_PAGES);
+        console.log(`   After MAX_PAGES cap (${MAX_PAGES}): ${targetUrls.length}\n`);
     } else {
         console.log(`📋 Using manual URL list (${MANUAL_URLS.length} URLs)\n`);
         targetUrls = MANUAL_URLS.slice(0, MAX_PAGES);
@@ -167,19 +197,22 @@ async function crawl() {
     targetUrls = [...new Set(targetUrls)];
 
     const pages = [];
-    for (let i = 0; i < targetUrls.length; i++) {
-        const url = targetUrls[i];
-        console.log(`[${i + 1}/${targetUrls.length}] Scraping: ${url}`);
+    for (let i = 0; i < targetUrls.length; i += CONCURRENCY) {
+        const batch = targetUrls.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(batch.map(async (url, j) => {
+            const idx = i + j + 1;
+            console.log(`[${idx}/${targetUrls.length}] Scraping: ${url}`);
+            const page = await scrapePage(url);
+            if (page) {
+                console.log(`   ✅ "${page.title.slice(0, 60)}" (${page.text.length} chars)`);
+            } else {
+                console.log('   ⏭️  Skipped (no content or error)');
+            }
+            return page;
+        }));
+        pages.push(...results.filter(Boolean));
 
-        const page = await scrapePage(url);
-        if (page) {
-            pages.push(page);
-            console.log(`   ✅ "${page.title.slice(0, 60)}" (${page.text.length} chars)`);
-        } else {
-            console.log('   ⏭️  Skipped (no content or error)');
-        }
-
-        if (i < targetUrls.length - 1) await sleep(DELAY_MS);
+        if (i + CONCURRENCY < targetUrls.length) await sleep(DELAY_MS);
     }
 
     fs.writeFileSync(OUTPUT_FILE, JSON.stringify(pages, null, 2), 'utf-8');
@@ -187,7 +220,11 @@ async function crawl() {
     console.log('   Run "npm run index" to upload to Upstash.\n');
 }
 
-crawl().catch(err => {
-    console.error('Crawler failed:', err);
-    process.exit(1);
-});
+// Only run crawl when executed directly (not when imported)
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+    crawl().catch(err => {
+        console.error('Crawler failed:', err);
+        process.exit(1);
+    });
+}

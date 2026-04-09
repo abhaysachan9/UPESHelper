@@ -62,10 +62,34 @@ export async function retrieveContext(query, topK = 5) {
 }
 
 /**
+ * Retrieve index info (vector count, dimensions, etc.).
+ * @returns {Promise<object>}
+ */
+export async function getIndexInfo() {
+    const index = getIndex();
+    return index.info();
+}
+
+/**
+ * Delete vectors by their IDs.
+ * @param {string[]} ids - Array of vector IDs to delete
+ */
+export async function deleteVectors(ids) {
+    if (!ids.length) return;
+    const index = getIndex();
+    const BATCH = 100;
+    for (let i = 0; i < ids.length; i += BATCH) {
+        await index.delete(ids.slice(i, i + BATCH));
+    }
+}
+
+/**
  * Upsert a list of document chunks into the vector DB.
  * @param {Array<{id: string, text: string, metadata: object}>} chunks
+ * @param {function} [onBatch] - Called after each successful batch with the batch's chunks
+ * @param {number} [startOffset=0] - Offset for log numbering (e.g. already-indexed count)
  */
-export async function upsertChunks(chunks) {
+export async function upsertChunks(chunks, onBatch, startOffset = 0) {
     const index = getIndex();
 
     const vectors = chunks.map(chunk => ({
@@ -80,7 +104,9 @@ export async function upsertChunks(chunks) {
     // Upsert in batches of 100
     const BATCH = 100;
     for (let i = 0; i < vectors.length; i += BATCH) {
-        await index.upsert(vectors.slice(i, i + BATCH));
-        console.log(`   Indexed vectors ${i + 1}–${Math.min(i + BATCH, vectors.length)}`);
+        const batchSlice = vectors.slice(i, i + BATCH);
+        await index.upsert(batchSlice);
+        console.log(`   Indexed vectors ${startOffset + i + 1}–${startOffset + Math.min(i + BATCH, vectors.length)}`);
+        if (onBatch) onBatch(chunks.slice(i, i + BATCH));
     }
 }
