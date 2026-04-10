@@ -1,0 +1,142 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                HOW TO INDEX JUST ONE PAGE                        ║
+║                    (Quick Guide)                                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 1: Add Page to Config                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Edit: scripts/dynamic-pages-config.js
+
+export const DYNAMIC_PAGES = [
+  "https://www.upes.ac.in/your-new-page",  ← Add this
+];
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 2: Crawl That Page                                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+$ npm run crawl:dynamic
+
+Output:
+  🕷️  Dynamic Crawler starting...
+  [1/1] Processing: https://www.upes.ac.in/your-new-page
+  ✅ "Page Title" (2500 chars)
+  ✅ Dynamic crawl complete!
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ STEP 3: Index Just That Page                                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+$ npm run index:single -- https://www.upes.ac.in/your-new-page
+
+Output:
+  📄 Indexing single page...
+  ✅ Found: "Page Title"
+  📝 Content: 2500 characters
+  📦 Chunks: 5
+  ☁️  Uploading to Upstash...
+  ✅ Success! 5 chunks indexed.
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ DONE! ✅                                                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Your page is now indexed and available in the chatbot!
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    VERIFICATION                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Check if it worked:
+
+$ npm run index:status
+
+Or test in chatbot:
+$ npm start
+Visit: http://localhost:3000
+Ask: "Tell me about [your page topic]"
+
+╔══════════════════════════════════════════════════════════════════╗
+║                  TROUBLESHOOTING                                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Problem: "Page not found in crawled data"
+Solution: Run step 2 first (npm run crawl:dynamic)
+
+Problem: "Already indexed"
+Solution: Page is already in database! Nothing to do.
+          If content changed, use: npm run reindex -- <URL>
+
+Problem: "Exceeded daily write limit"
+Solution: Wait until tomorrow (limit resets daily)
+          Or upgrade Upstash plan
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    QUICK REFERENCE                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Index ONE new page:
+  npm run index:single -- <URL>
+
+Index MULTIPLE new pages:
+  npm run index:new
+
+Update existing page:
+  npm run reindex -- <URL>
+
+Check status:
+  npm run index:status
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    WRITE OPERATIONS                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+index:single  →  2-20 writes   (one page)
+index:new     →  varies        (only new pages)
+reindex       →  4-40 writes   (delete + insert)
+index         →  10,000+ writes (all pages)
+
+💡 Tip: Use index:single for best efficiency!
+
+╔══════════════════════════════════════════════════════════════════╗
+║                      EXAMPLE                                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Real example with the fee-structure page:
+
+$ npm run index:single -- https://www.upes.ac.in/admissions/fee-structure
+
+📄 Indexing single page...
+   ✅ Found: "All Programs Fee Structure | UPES"
+   📝 Content: 2632 characters
+   🏷️  Type: Dynamic
+   📦 Chunks: 5
+   ☁️  Uploading to Upstash...
+   ✅ Success! 5 chunks indexed.
+
+Result: Only 5 write operations (vs 10,000+ for full index)
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    DOCUMENTATION                                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📖 INDEX-ONE-PAGE.md         - Detailed guide
+📖 INCREMENTAL-INDEXING.md   - Full incremental indexing
+📖 QUICK-REFERENCE.md        - All commands
+📖 FAQ.md                    - Common questions
+
+╔══════════════════════════════════════════════════════════════════╗
+║                      SUMMARY                                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Three simple steps:
+  1. Add to config
+  2. Crawl: npm run crawl:dynamic
+  3. Index: npm run index:single -- <URL>
+
+That's it! 🎉
+
+Only that one page is indexed (2-20 write operations).
+Perfect for adding individual dynamic pages.

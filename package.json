@@ -13,6 +13,8 @@
     "crawl:all": "npm run crawl && npm run crawl:dynamic",
     "test:dynamic": "node scripts/testDynamic.js",
     "index": "node scripts/index.js",
+    "index:new": "node scripts/indexNew.js",
+    "index:single": "node scripts/indexSinglePage.js",
     "index:status": "node scripts/indexStatus.js",
     "reindex": "node scripts/reindexPage.js",
     "clear": "node scripts/clearIndex.js"

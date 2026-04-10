@@ -5,6 +5,7 @@
  */
 
 export const DYNAMIC_PAGES = [
+    "https://www.upes.ac.in/admissions/fee-structure",
   // Example: Pages with React/Vue/Angular content
   // "https://www.upes.ac.in/interactive-dashboard",
   // "https://www.upes.ac.in/student-portal",

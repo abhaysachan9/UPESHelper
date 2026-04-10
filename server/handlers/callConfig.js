@@ -6,10 +6,35 @@
 
 import { GoogleGenAI } from '@google/genai';
 import { retrieveContext } from '../services/vectorDb.js';
+import { URL } from 'url';
 
 const MODEL = 'gemini-3.1-flash-live-preview';
 const WS_URL =
     'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained';
+
+// Language code to language name mapping + BCP-47 codes for Live API speech output
+const LANGUAGE_NAMES = {
+    'en-IN': 'English',
+    'hi-IN': 'Hindi (हिन्दी)',
+    'es-ES': 'Spanish (Español)',
+    'fr-FR': 'French (Français)',
+    'de-DE': 'German (Deutsch)',
+    'zh-CN': 'Chinese (中文)',
+    'ja-JP': 'Japanese (日本語)',
+    'ar-SA': 'Arabic (العربية)',
+    'pt-BR': 'Portuguese (Português)',
+    'ru-RU': 'Russian (Русский)',
+    'ko-KR': 'Korean (한국어)',
+    'it-IT': 'Italian (Italiano)',
+    'nl-NL': 'Dutch (Nederlands)',
+    'tr-TR': 'Turkish (Türkçe)',
+    'vi-VN': 'Vietnamese (Tiếng Việt)',
+    'th-TH': 'Thai (ไทย)',
+    'bn-IN': 'Bengali (বাংলা)',
+    'ta-IN': 'Tamil (தமிழ்)',
+    'te-IN': 'Telugu (తెలుగు)',
+    'mr-IN': 'Marathi (मराठी)',
+};
 
 export async function handleCallConfig(req, res) {
     if (req.method === 'OPTIONS') {
@@ -21,6 +46,11 @@ export async function handleCallConfig(req, res) {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error('Missing GEMINI_API_KEY');
 
+        // Extract language from query parameter
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const language = url.searchParams.get('language') || 'en-IN';
+        const languageName = LANGUAGE_NAMES[language] || 'English';
+
         const contextChunks = await retrieveContext(
             'UPES university admissions fees courses programs hostel scholarships placements campus overview',
             10,
@@ -30,16 +60,20 @@ export async function handleCallConfig(req, res) {
             .map((c, i) => `[${i + 1}] ${c.text}`)
             .join('\n\n');
 
+        const languageInstruction = language !== 'en-IN' 
+            ? `\n- CRITICAL LANGUAGE REQUIREMENT: You MUST speak ENTIRELY in ${languageName}. Every single word you say must be in ${languageName}. Do NOT mix languages or use English words. Translate all information from the English context into ${languageName} naturally and fluently. Think in ${languageName} and respond in ${languageName}.`
+            : '';
+
         const systemInstruction = [
             'You are UPES Helper — a friendly, knowledgeable voice assistant for UPES (University of Petroleum and Energy Studies).',
             'You are on a live voice call with a student or prospective student.',
             '',
             'RULES:',
             '- Answer ONLY from the provided knowledge base context below.',
-            '- If the context lacks information, say you don\'t have that detail and suggest contacting UPES at admissions@upes.ac.in or visiting upes.ac.in.',
+            '- If the context lacks information, respond appropriately in the user\'s language saying you don\'t have that detail and suggest contacting UPES at admissions@upes.ac.in or visiting upes.ac.in.',
             '- Be conversational, warm, and concise — this is a voice call, not a text chat.',
             '- Use short sentences. Avoid markdown, bullet points, or numbered lists.',
-            '- Speak naturally as if talking to a person.',
+            '- Speak naturally as if talking to a person.' + languageInstruction,
             '',
             '─── KNOWLEDGE BASE CONTEXT ───',
             context,
@@ -68,6 +102,7 @@ export async function handleCallConfig(req, res) {
                             voiceConfig: {
                                 prebuiltVoiceConfig: { voiceName: 'Aoede' },
                             },
+                            languageCode: language,
                         },
                     },
                 },
@@ -77,7 +112,7 @@ export async function handleCallConfig(req, res) {
         const token = tokenResponse.name;
         if (!token) throw new Error('Gemini authTokens.create() returned no token');
 
-        console.log(`📞 Call config served (${contextChunks.length} context chunks, ephemeral token created)`);
+        console.log(`📞 Call config served [${language}] (${contextChunks.length} context chunks, ephemeral token created)`);
 
         res.writeHead(200, corsHeaders());
         res.end(JSON.stringify({ token, wsUrl: WS_URL, model: MODEL }));

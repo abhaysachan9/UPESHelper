@@ -13,8 +13,11 @@ npm run crawl:dynamic                # Dynamic pages only
 npm run crawl:all                    # Both (recommended)
 
 # Indexing
-npm run index                        # Upload to Upstash
+npm run index                        # Index all pages
+npm run index:new                    # Index only NEW pages ⭐
+npm run index:single -- <URL>        # Index ONE page ⭐⭐
 npm run index:status                 # Check status
+npm run reindex -- <URL>             # Re-index one page
 npm run clear                        # Clear database
 
 # Running
@@ -99,6 +102,18 @@ export const DYNAMIC_PAGES = [
 ];
 ```
 
+### Index only new pages ⭐
+```bash
+# After adding new pages to config:
+npm run crawl:dynamic
+npm run index:new        # Only indexes NEW pages!
+```
+
+### Re-index one page
+```bash
+npm run reindex -- https://www.upes.ac.in/your-page
+```
+
 ### Test one page
 ```bash
 # Add just that page to config, then:
@@ -137,6 +152,7 @@ npm run index:status
 ## 🔗 Quick Links
 
 - **Setup:** [GETTING-STARTED-DYNAMIC.md](GETTING-STARTED-DYNAMIC.md)
+- **Incremental:** [INCREMENTAL-INDEXING.md](INCREMENTAL-INDEXING.md) ⭐
 - **Help:** [FAQ.md](FAQ.md)
 - **Verify:** [CHECKLIST.md](CHECKLIST.md)
 - **All Docs:** [DOCS-INDEX.md](DOCS-INDEX.md)

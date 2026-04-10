@@ -86,10 +86,14 @@ async function fireQuestion(question) {
     scrollToBottom();
 
     try {
+        // Get selected language
+        const languageSelect = document.getElementById('language-select');
+        const language = languageSelect?.value || 'en-IN';
+
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: question }),
+            body: JSON.stringify({ message: question, language }),
         });
 
         typingEl.remove();

@@ -1,0 +1,132 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              INDEXING OPTIONS - QUICK GUIDE                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 1. INDEX ONE NEW PAGE (Fastest - Recommended for single pages)  │
+└──────────────────────────────────────────────────────────────────┘
+
+   Command:  npm run index:single -- <URL>
+   
+   Use when: Adding ONE new page
+   
+   Example:
+   $ npm run index:single -- https://www.upes.ac.in/new-page
+   
+   Write ops: 2-20 (one page only)
+   Time: ~5 seconds
+   
+   ✅ Perfect for: Adding one new dynamic page
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 2. INDEX ALL NEW PAGES (Smart - Skips already indexed)          │
+└──────────────────────────────────────────────────────────────────┘
+
+   Command:  npm run index:new
+   
+   Use when: Adding MULTIPLE new pages
+   
+   Example:
+   $ npm run crawl:dynamic
+   $ npm run index:new
+   
+   Write ops: Varies (only new pages)
+   Time: ~1-5 minutes
+   
+   ✅ Perfect for: Regular incremental updates
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 3. RE-INDEX ONE PAGE (Updates existing page)                    │
+└──────────────────────────────────────────────────────────────────┘
+
+   Command:  npm run reindex -- <URL>
+   
+   Use when: Page content CHANGED
+   
+   Example:
+   $ npm run reindex -- https://www.upes.ac.in/updated-page
+   
+   Write ops: 4-40 (deletes old + adds new)
+   Time: ~10 seconds
+   
+   ✅ Perfect for: Updating existing content
+
+┌──────────────────────────────────────────────────────────────────┐
+│ 4. INDEX ALL (Full re-index - Use sparingly)                    │
+└──────────────────────────────────────────────────────────────────┘
+
+   Command:  npm run index
+   
+   Use when: Starting fresh or major changes
+   
+   Example:
+   $ npm run crawl:all
+   $ npm run index
+   
+   Write ops: 10,000+ (all pages)
+   Time: ~30 minutes
+   
+   ⚠️  Warning: May hit daily limits
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    DECISION TREE                                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+   How many pages?
+         │
+    ┌────┴────┐
+    │         │
+   ONE     MULTIPLE
+    │         │
+    ▼         ▼
+ New or    New or
+ Update?   Update?
+    │         │
+ ┌──┴──┐  ┌──┴──┐
+ │     │  │     │
+NEW  UPDATE NEW UPDATE
+ │     │  │     │
+ ▼     ▼  ▼     ▼
+index: reindex index: reindex
+single         :new   (each)
+
+╔══════════════════════════════════════════════════════════════════╗
+║                  YOUR CURRENT SITUATION                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Status: ⚠️  Hit daily write limit (10,000 ops)
+
+Solution: Wait until tomorrow, then:
+
+For the fee-structure page (already indexed):
+  ✅ Nothing to do! It's already in the database.
+
+For NEW pages tomorrow:
+  $ npm run index:single -- <URL>    (one page)
+  or
+  $ npm run index:new                (multiple pages)
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    QUICK COMMANDS                                ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Check status:
+  $ npm run index:status
+
+Check if page is indexed:
+  $ npm run index:single -- <URL>
+  (will tell you if already indexed)
+
+View progress:
+  $ cat crawled-data/index-progress.json | wc -l
+  (shows number of indexed chunks)
+
+╔══════════════════════════════════════════════════════════════════╗
+║                      DOCUMENTATION                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📖 INDEX-ONE-PAGE.md         - How to index one page
+📖 INCREMENTAL-INDEXING.md   - Full incremental guide
+📖 QUICK-REFERENCE.md        - Command cheat sheet
+📖 FAQ.md                    - Common questions
+

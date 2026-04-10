@@ -219,6 +219,29 @@ body:has(> .landing:not(.hidden)) .header {
   color: var(--accent);
 }
 
+.header-select {
+  height: 2rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.15s var(--ease);
+  cursor: pointer;
+}
+
+.header-select:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+
+.header-select:focus {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
 .header-btn {
   width: 2rem;
   height: 2rem;

@@ -7,6 +7,7 @@ export function initVoice() {
     const voiceBtn = document.getElementById('voice-btn');
     const input = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
+    const languageSelect = document.getElementById('language-select');
 
     if (!voiceBtn) return;
 
@@ -17,9 +18,18 @@ export function initVoice() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN';
     recognition.continuous = false;
     recognition.interimResults = false;
+
+    // Update recognition language when language selector changes
+    const updateLanguage = () => {
+        recognition.lang = languageSelect?.value || 'en-IN';
+    };
+    updateLanguage();
+    
+    if (languageSelect) {
+        languageSelect.addEventListener('change', updateLanguage);
+    }
 
     let listening = false;
 

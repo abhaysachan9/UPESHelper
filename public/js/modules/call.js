@@ -307,7 +307,12 @@ function base64ToBytes(b64) {
 
 async function fetchConfig() {
     console.log('[Call] Fetching call config…');
-    const res = await fetch('/api/call-config');
+    
+    // Get selected language
+    const languageSelect = document.getElementById('language-select');
+    const language = languageSelect?.value || 'en-IN';
+    
+    const res = await fetch(`/api/call-config?language=${encodeURIComponent(language)}`);
     if (!res.ok) {
         const body = await res.text();
         console.error('[Call] Config fetch failed:', res.status, body);
