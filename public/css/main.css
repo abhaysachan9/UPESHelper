@@ -221,7 +221,7 @@ body:has(> .landing:not(.hidden)) .header {
 
 .header-select {
   height: 2rem;
-  padding: 0 0.5rem;
+  padding: 0 1.75rem 0 0.5rem;
   border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--text-1);
@@ -230,10 +230,22 @@ body:has(> .landing:not(.hidden)) .header {
   font-weight: 500;
   transition: all 0.15s var(--ease);
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  background-size: 10px;
+  max-width: 140px;
+}
+
+[data-theme="dark"] .header-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
 }
 
 .header-select:hover {
-  background: var(--surface-3);
+  background-color: var(--surface-3);
   border-color: var(--border-strong);
 }
 
@@ -1322,8 +1334,22 @@ body:has(> .landing:not(.hidden)) .composer-inner {
     padding-bottom: calc(0.625rem + env(safe-area-inset-bottom, 0px));
   }
 
+  .header-select {
+    max-width: 160px;
+  }
+
   [data-font="medium"] { --text-scale: 1.125; }
   [data-font="large"]  { --text-scale: 1.25; }
+}
+
+/* ── 12b. Responsive — Mobile (401px-639px) ───────────────── */
+@media (min-width: 401px) and (max-width: 639px) {
+  .header-select {
+    font-size: 0.72rem;
+    height: 1.875rem;
+    padding: 0 1.6rem 0 0.45rem;
+    max-width: 125px;
+  }
 }
 
 /* ── 13. Responsive — Desktop (1024px+) ───────────────────── */
@@ -1437,6 +1463,15 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 
   .composer-box {
     padding: 0.35rem 0.35rem 0.35rem 0.75rem;
+  }
+
+  .header-select {
+    font-size: 0.7rem;
+    height: 1.75rem;
+    padding: 0 1.5rem 0 0.4rem;
+    max-width: 110px;
+    background-position: right 0.3rem center;
+    background-size: 9px;
   }
 
   [data-font="medium"] { --text-scale: 1.1; }
