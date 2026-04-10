@@ -1372,10 +1372,6 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 
 /* ── 14. Responsive — Small screens (≤400px) ──────────────── */
 @media (max-width: 400px) {
-  .header-wordmark {
-    display: none;
-  }
-
   .landing-heading {
     font-size: calc(1.4rem * var(--text-scale));
   }
