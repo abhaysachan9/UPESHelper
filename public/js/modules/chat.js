@@ -4,6 +4,7 @@
  */
 
 import { renderMarkdown } from './markdown.js';
+import { loadGraduationHat, initStaticLotties } from './lottie-hat.js';
 
 const HISTORY_KEY = 'upes-chat-history';
 const MAX_HISTORY = 30;
@@ -50,6 +51,8 @@ export function initChat() {
     });
 
     clearBtn?.addEventListener('click', clearChat);
+
+    initStaticLotties();
 
     const headerBrand = document.querySelector('.header-brand');
     headerBrand?.addEventListener('click', () => {
@@ -209,9 +212,14 @@ function makeAvatar(role) {
     const a = document.createElement('div');
     a.className = 'msg-avatar';
     a.setAttribute('aria-hidden', 'true');
-    a.innerHTML = role === 'user'
-        ? '<i class="fa-solid fa-user"></i>'
-        : '<i class="fa-solid fa-graduation-cap"></i>';
+    if (role === 'user') {
+        a.innerHTML = '<i class="fa-solid fa-user"></i>';
+    } else {
+        const lottieContainer = document.createElement('div');
+        lottieContainer.className = 'lottie-graduation-hat';
+        a.appendChild(lottieContainer);
+        loadGraduationHat(lottieContainer);
+    }
     return a;
 }
 

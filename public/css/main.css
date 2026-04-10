@@ -268,18 +268,17 @@ body:has(> .chat-view.active) {
 }
 
 .hero-badge {
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-md);
-  background: var(--accent-soft);
+  width: 9rem;
+  height: 9rem;
+  border-radius: var(--radius-lg);
   color: var(--accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 5.5rem;
   margin-bottom: 1.25rem;
-  border: 1px solid var(--accent-ring);
-  box-shadow: 0 4px 16px var(--accent-ring);
+
+  
 }
 
 .landing-heading {
@@ -510,8 +509,8 @@ body:has(> .chat-view.active) {
 
 /* Avatar */
 .msg-avatar {
-  width: 1.625rem;
-  height: 1.625rem;
+  width: 4.875rem;
+  height: 4.875rem;
   border-radius: 50%;
   font-size: 0.625rem;
   display: flex;
@@ -568,7 +567,7 @@ body:has(> .chat-view.active) {
   font-size: 0.675rem;
   color: var(--text-3);
   max-width: 85%;
-  margin-left: 2.125rem;
+  margin-left: 5.375rem;
 }
 
 .source-link {
@@ -879,8 +878,8 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 
 .call-avatar-ring {
   position: relative;
-  width: 128px;
-  height: 128px;
+  width: 384px;
+  height: 384px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -908,8 +907,8 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 }
 
 .call-avatar {
-  width: 80px;
-  height: 80px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
   background: linear-gradient(135deg, #2563EB, #60A5FA);
   display: flex;
@@ -1072,6 +1071,33 @@ body:has(> .landing:not(.hidden)) .composer-inner {
   transform: scale(1.08);
 }
 
+/* ── 10b. Lottie Graduation Hat ─────────────────────────── */
+.lottie-graduation-hat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lottie-graduation-hat svg {
+  display: block !important;
+}
+
+.hero-badge .lottie-graduation-hat {
+  width: 100%;
+  height: 100%;
+}
+
+.call-avatar .lottie-graduation-hat {
+  width: 100%;
+  height: 100%;
+}
+
+.msg-avatar .lottie-graduation-hat {
+  width: 100%;
+  height: 100%;
+}
+
 /* ── 11. Animations ────────────────────────────────────────── */
 @keyframes fadeInUp {
   from {
@@ -1175,10 +1201,15 @@ body:has(> .landing:not(.hidden)) .composer-inner {
   }
 
   .hero-badge {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 10.5rem;
+    height: 10.5rem;
     font-size: 5.35rem;
     margin-bottom: 1.5rem;
+  }
+
+  .hero-badge .lottie-graduation-hat {
+    width: 100%;
+    height: 100%;
   }
 
   .landing-topics {
@@ -1235,9 +1266,14 @@ body:has(> .landing:not(.hidden)) .composer-inner {
   }
 
   .hero-badge {
-    width: 3.75rem;
-    height: 3.75rem;
+    width: 11.25rem;
+    height: 11.25rem;
     font-size: 5.5rem;
+  }
+
+  .hero-badge .lottie-graduation-hat {
+    width: 100%;
+    height: 100%;
   }
 
   .landing-topics {
@@ -1330,13 +1366,13 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 /* ── 15. Call Overlay — Mobile ─────────────────────────────── */
 @media (max-width: 640px) {
   .call-avatar-ring {
-    width: 100px;
-    height: 100px;
+    width: 300px;
+    height: 300px;
   }
 
   .call-avatar {
-    width: 68px;
-    height: 68px;
+    width: 204px;
+    height: 204px;
     font-size: 1.7rem;
   }
 
