@@ -34,6 +34,7 @@ if (fs.existsSync(envPath)) {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
+const DYNAMIC_INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages-dynamic.json');
 const PROGRESS_FILE = path.join(rootDir, 'crawled-data', 'index-progress.json');
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
@@ -62,10 +63,21 @@ async function index() {
     }
 
     const pages = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
+    
+    // Load dynamic pages if they exist
+    let dynamicPages = [];
+    if (fs.existsSync(DYNAMIC_INPUT_FILE)) {
+        dynamicPages = JSON.parse(fs.readFileSync(DYNAMIC_INPUT_FILE, 'utf-8'));
+        console.log(`📄  Found ${dynamicPages.length} dynamic pages to index`);
+    }
+    
+    // Combine static and dynamic pages
+    const allPages = [...pages, ...dynamicPages];
+    console.log(`📄  Total pages to index: ${allPages.length} (${pages.length} static + ${dynamicPages.length} dynamic)`);
 
     // Build all chunks with page-level context prepended
     const allChunks = [];
-    for (const page of pages) {
+    for (const page of allPages) {
         const textChunks = chunkText(page.text);
         textChunks.forEach((chunk, i) => {
             // Prepend page title so every chunk has page-level context for retrieval
@@ -79,6 +91,7 @@ async function index() {
                     chunkIndex: i,
                     totalChunks: textChunks.length,
                     crawledAt: page.crawledAt,
+                    dynamic: page.dynamic || false,
                 },
             });
         });
@@ -88,7 +101,7 @@ async function index() {
     const indexedIds = loadProgress();
     const remainingChunks = allChunks.filter(c => !indexedIds.has(c.id));
 
-    console.log(`\n📚  Indexing ${pages.length} pages into Upstash Vector DB...`);
+    console.log(`\n📚  Indexing ${allPages.length} pages into Upstash Vector DB...`);
     console.log(`   Total chunks: ${allChunks.length}`);
 
     if (indexedIds.size > 0) {

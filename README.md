@@ -35,8 +35,11 @@ upeshelper/
 │   └── utils/
 │       └── http.js       # HTTP body parsing helper
 ├── scripts/
-│   ├── crawl.js          # UPES website crawler
-│   └── index.js          # Chunk & index into Upstash
+│   ├── crawl.js          # Static website crawler
+│   ├── crawlDynamic.js   # Dynamic crawler (Puppeteer)
+│   ├── dynamic-pages-config.js  # Dynamic pages list
+│   ├── index.js          # Chunk & index into Upstash
+│   └── CRAWLING.md       # Crawling documentation
 ├── public/
 │   ├── index.html        # Main HTML
 │   ├── css/
@@ -89,11 +92,22 @@ CRAWL_BASE_URL=https://www.upes.ac.in
 
 ### 3. Run the crawler
 
+For static pages:
 ```bash
 npm run crawl
 ```
 
-This crawls up to 50 UPES pages and saves them to `crawled-data/pages.json`.
+For JavaScript-heavy pages (after configuring `scripts/dynamic-pages-config.js`):
+```bash
+npm run crawl:dynamic
+```
+
+Or crawl everything:
+```bash
+npm run crawl:all
+```
+
+This crawls UPES pages and saves them to `crawled-data/`.
 
 ### 4. Index content into Upstash
 
@@ -157,14 +171,40 @@ Visit **http://localhost:3000** 🎉
 
 ## 🕷️ Crawler Config
 
+The project supports two types of crawling:
+
+### Static Crawling (Default)
+Fast HTML parsing for standard web pages:
+
+```bash
+npm run crawl
+```
+
+### Dynamic Crawling (JavaScript-heavy pages)
+Uses Puppeteer to render JavaScript content:
+
+```bash
+npm run crawl:dynamic
+```
+
+### Crawl Everything
+Run both crawlers:
+
+```bash
+npm run crawl:all
+```
+
 Configure via environment variables in `.env`:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CRAWL_BASE_URL` | `https://www.upes.ac.in` | Starting URL |
 | `MAX_PAGES` | `50` | Max pages to crawl |
+| `PUPPETEER_HEADLESS` | `true` | Run browser in headless mode |
 
-The crawler only indexes pages matching relevant paths (fees, admission, courses, hostel, etc.) and adds a polite 1.5s delay between requests.
+To add JavaScript-heavy pages for dynamic crawling, edit `scripts/dynamic-pages-config.js`.
+
+See [scripts/CRAWLING.md](scripts/CRAWLING.md) for detailed documentation.
 
 ---
 

@@ -14,6 +14,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import * as cheerio from "cheerio";
+import { isDynamicPage } from "./dynamic-pages-config.js";
 
 // ─── Load env ─────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -337,7 +338,10 @@ async function crawl() {
     );
     console.log(`   After route filter: ${afterRouteFilter.length}`);
 
-    targetUrls = afterRouteFilter.slice(0, MAX_PAGES);
+    const afterDynamicFilter = afterRouteFilter.filter((u) => !isDynamicPage(u));
+    console.log(`   After dynamic page filter: ${afterDynamicFilter.length}`);
+
+    targetUrls = afterDynamicFilter.slice(0, MAX_PAGES);
     console.log(
       `   After MAX_PAGES cap (${MAX_PAGES}): ${targetUrls.length}\n`,
     );

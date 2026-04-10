@@ -9,6 +9,9 @@
     "dev": "node --watch server/index.js & sleep 2 && browser-sync start --proxy 'http://localhost:3000' --files 'public/**/*' --port 3001 --no-open",
     "build": "echo 'Building for Netlify: No compilation needed for vanilla JS frontend.'",
     "crawl": "node scripts/crawl.js",
+    "crawl:dynamic": "node scripts/crawlDynamic.js",
+    "crawl:all": "npm run crawl && npm run crawl:dynamic",
+    "test:dynamic": "node scripts/testDynamic.js",
     "index": "node scripts/index.js",
     "index:status": "node scripts/indexStatus.js",
     "reindex": "node scripts/reindexPage.js",
@@ -21,6 +24,7 @@
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.5",
     "node-fetch": "^3.3.2",
+    "puppeteer": "^23.0.0",
     "ws": "^8.20.0"
   },
   "devDependencies": {
