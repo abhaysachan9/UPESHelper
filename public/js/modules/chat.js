@@ -1,7 +1,6 @@
 /**
  * public/js/modules/chat.js
- * ChatGPT-style chat: landing → chat view transition,
- * auto-expanding textarea, streaming-like message flow.
+ * Landing → chat view transition, message rendering, API integration.
  */
 
 import { renderMarkdown } from './markdown.js';
@@ -9,9 +8,8 @@ import { renderMarkdown } from './markdown.js';
 const HISTORY_KEY = 'upes-chat-history';
 const MAX_HISTORY = 30;
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
 let landing, chatView, messagesInner, messagesScroll;
-let textarea, sendBtn, voiceBtn, clearBtn;
+let textarea, sendBtn, clearBtn;
 let isInChatMode = false;
 
 export function initChat() {
@@ -23,16 +21,11 @@ export function initChat() {
     sendBtn = document.getElementById('send-btn');
     clearBtn = document.getElementById('clear-btn');
 
-    // ── Restore history ───────────────────────────────────────────
-    // restoreHistory(); // Disabled so localhost and IP act identically as fresh starts
-
-    // ── Auto-expand textarea ──────────────────────────────────────
     textarea.addEventListener('input', () => {
         autoResize(textarea);
         sendBtn.disabled = !textarea.value.trim();
     });
 
-    // ── Send on Enter (Shift+Enter for new line) ──────────────────
     textarea.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -42,24 +35,34 @@ export function initChat() {
 
     sendBtn.addEventListener('click', send);
 
-    // ── FAQ chips ─────────────────────────────────────────────────
-    document.querySelectorAll('.faq-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const q = chip.getAttribute('data-question');
-            if (q) fireQuestion(q);
+    document.querySelectorAll('.topic-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const q = card.getAttribute('data-question');
+            if (q) populateInput(q);
         });
     });
 
-    // ── Clear / New chat ──────────────────────────────────────────
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', () => {
+            const q = link.getAttribute('data-question');
+            if (q) populateInput(q);
+        });
+    });
+
     clearBtn?.addEventListener('click', clearChat);
-    const topbarBrand = document.querySelector('.topbar-brand');
-    topbarBrand?.addEventListener('click', (e) => {
-        // Clear history from storage so the page loads fresh when it navigates
+
+    const headerBrand = document.querySelector('.header-brand');
+    headerBrand?.addEventListener('click', () => {
         localStorage.removeItem(HISTORY_KEY);
     });
 }
 
-// ── Send flow ─────────────────────────────────────────────────────────────────
+function populateInput(text) {
+    textarea.value = text;
+    autoResize(textarea);
+    sendBtn.disabled = false;
+    textarea.focus();
+}
 
 function send() {
     const text = textarea.value.trim();
@@ -71,14 +74,11 @@ function send() {
 }
 
 async function fireQuestion(question) {
-    // Switch to chat mode on first message
     if (!isInChatMode) enterChatMode();
 
-    // Render user bubble
     appendUserMessage(question);
     scrollToBottom();
 
-    // Typing indicator
     const typingEl = appendTyping();
     scrollToBottom();
 
@@ -101,13 +101,11 @@ async function fireQuestion(question) {
         }
     } catch {
         typingEl.remove();
-        appendBotMessage('⚠️ Network error. Please check your connection and try again.', []);
+        appendBotMessage('Network error. Please check your connection and try again.', []);
     }
 
     scrollToBottom();
 }
-
-// ── Chat mode transition ──────────────────────────────────────────────────────
 
 function enterChatMode() {
     isInChatMode = true;
@@ -130,25 +128,14 @@ function clearChat() {
     sendBtn.disabled = true;
 }
 
-// ── Message renderers ─────────────────────────────────────────────────────────
-
 function appendUserMessage(text) {
     const group = makeGroup();
     const row = makeRow('user');
-    const avatar = makeAvatar('user');
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.textContent = text;
 
-    row.appendChild(makeAvatar('user'));
     row.appendChild(bubble);
-
-    // Flip: avatar after bubble for user (flex-direction row-reverse handles it)
-    row.innerHTML = '';
-    const av2 = makeAvatar('user');
-    row.appendChild(bubble);
-    row.appendChild(av2);
-
     group.appendChild(row);
     messagesInner.appendChild(group);
 }
@@ -206,8 +193,6 @@ function appendTyping() {
     return group;
 }
 
-// ── DOM helpers ───────────────────────────────────────────────────────────────
-
 function makeGroup() {
     const g = document.createElement('div');
     g.className = 'msg-group';
@@ -226,13 +211,13 @@ function makeAvatar(role) {
     a.setAttribute('aria-hidden', 'true');
     a.innerHTML = role === 'user'
         ? '<i class="fa-solid fa-user"></i>'
-        : '<i class="fa-solid fa-robot"></i>';
+        : '<i class="fa-solid fa-graduation-cap"></i>';
     return a;
 }
 
 function autoResize(el) {
     el.style.height = '1px';
-    el.style.height = Math.min(el.scrollHeight, 220) + 'px';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
 }
 
 function scrollToBottom() {
@@ -240,8 +225,6 @@ function scrollToBottom() {
         messagesScroll.scrollTop = messagesScroll.scrollHeight;
     });
 }
-
-// ── Persistence ───────────────────────────────────────────────────────────────
 
 function persist(question, answer, sources) {
     try {

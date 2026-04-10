@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description"
     content="UPES Helper — A smart AI-powered university assistant. Get instant answers about fees, admissions, courses, hostel, scholarships and more." />
   <title>UPES Helper — Smart University Assistant</title>
@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,400&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/css/main.css" />
@@ -19,24 +19,24 @@
 
 <body>
 
-  <!-- ─── Top Bar ────────────────────────────────────────────────── -->
-  <header class="topbar" id="topbar">
-    <div class="topbar-inner">
-      <a class="topbar-brand" href="/" aria-label="UPES Helper Home">
-        <img src="/assets/upesimg.svg" alt="UPES" class="topbar-logo" />
-        <span class="topbar-title"><strong>UNI</strong>helper</span>
+  <!-- ─── Header ──────────────────────────────────────────────── -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <a class="header-brand" href="/" aria-label="UPES Helper Home">
+        <img src="/assets/upesimg.svg" alt="UPES" class="header-logo" />
+        <span class="header-wordmark">UPES <span>Helper</span></span>
       </a>
 
-      <div class="topbar-actions">
-        <div class="accessibility-controls" role="group" aria-label="Font size">
-          <button onclick="setFontSize('small')" id="font-sm" title="Normal">A</button>
-          <button onclick="setFontSize('medium')" id="font-md" title="Large">A+</button>
-          <button onclick="setFontSize('large')" id="font-lg" title="XL">A++</button>
+      <div class="header-actions">
+        <div class="font-controls" role="group" aria-label="Font size">
+          <button onclick="setFontSize('small')" id="font-sm" title="Default size">A</button>
+          <button onclick="setFontSize('medium')" id="font-md" title="Large size">A+</button>
+          <button onclick="setFontSize('large')" id="font-lg" title="Extra large">A++</button>
         </div>
-        <button id="theme-btn" class="icon-btn" title="Toggle theme" aria-label="Toggle dark mode">
+        <button id="theme-btn" class="header-btn" title="Toggle theme" aria-label="Toggle dark mode">
           <i class="fa-solid fa-moon"></i>
         </button>
-        <button id="clear-btn" class="icon-btn" title="New conversation" aria-label="Start new conversation"
+        <button id="clear-btn" class="header-btn" title="New conversation" aria-label="New conversation"
           style="display:none">
           <i class="fa-solid fa-pen-to-square"></i>
         </button>
@@ -44,80 +44,135 @@
     </div>
   </header>
 
-  <!-- ─── Landing State ──────────────────────────────────────────── -->
+  <!-- ─── Landing State ──────────────────────────────────────── -->
   <main class="landing" id="landing">
-    <div class="landing-inner">
-      <a href="https://www.upes.ac.in" target="_blank" rel="noopener" aria-label="UPES">
-        <img src="/assets/upesimg.svg" alt="UPES Logo" class="landing-logo" />
-      </a>
-      <h1 class="landing-heading">
-        <span class="brand-uni">UNI</span><span class="brand-helper">helper</span>
-      </h1>
-      <p class="landing-tagline">A SMART UNIVERSITY ASSISTANT</p>
-      <p class="landing-subtitle">Ask me anything about UPES — admissions, fees, courses, campus life, and more.</p>
+    <div class="landing-container">
+      <div class="landing-hero">
+        <div class="hero-badge" aria-hidden="true">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h1 class="landing-heading">
+          Your smart assistant for
+          all things <span class="text-accent">UPES</span>
+        </h1>
+        <p class="landing-sub">
+          Get instant, verified answers about admissions, fees, courses, scholarships, hostel, placements, and campus
+          life.
+        </p>
+      </div>
 
-      <!-- Landing FAQ chips -->
-      <div class="landing-faqs" role="list" aria-label="Suggested questions">
-        <button class="faq-chip" data-question="What is the fees structure at UPES?" role="listitem">
-          <i class="fa-solid fa-wallet"></i> Fees Structure
+      <div class="landing-topics" role="list" aria-label="Suggested questions">
+        <button class="topic-card" data-question="What is the fees structure at UPES?" role="listitem">
+          <span class="topic-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+          <div class="topic-body">
+            <span class="topic-label">Fees Structure</span>
+            <span class="topic-desc">Tuition, hostel &amp; other charges</span>
+          </div>
         </button>
-        <button class="faq-chip" data-question="How does the UPES admission process work?" role="listitem">
-          <i class="fa-solid fa-file-pen"></i> Admission Process
+        <button class="topic-card" data-question="How does the UPES admission process work?" role="listitem">
+          <span class="topic-icon"><i class="fa-solid fa-file-pen"></i></span>
+          <div class="topic-body">
+            <span class="topic-label">Admission Process</span>
+            <span class="topic-desc">Steps, eligibility &amp; deadlines</span>
+          </div>
         </button>
-        <button class="faq-chip" data-question="What courses and programs does UPES offer?" role="listitem">
-          <i class="fa-solid fa-list-check"></i> Courses Offered
+        <button class="topic-card" data-question="What courses and programs does UPES offer?" role="listitem">
+          <span class="topic-icon"><i class="fa-solid fa-book-open"></i></span>
+          <div class="topic-body">
+            <span class="topic-label">Courses &amp; Programs</span>
+            <span class="topic-desc">UG, PG &amp; doctoral offerings</span>
+          </div>
         </button>
-        <button class="faq-chip" data-question="Tell me about UPES hostel facilities." role="listitem">
-          <i class="fa-solid fa-bed"></i> Hostel Info
+        <button class="topic-card" data-question="Tell me about UPES hostel facilities." role="listitem">
+          <span class="topic-icon"><i class="fa-solid fa-bed"></i></span>
+          <div class="topic-body">
+            <span class="topic-label">Hostel Facilities</span>
+            <span class="topic-desc">Rooms, amenities &amp; campus living</span>
+          </div>
         </button>
-        <button class="faq-chip" data-question="What scholarships are available at UPES?" role="listitem">
-          <i class="fa-solid fa-award"></i> Scholarships
+        <button class="topic-card" data-question="What scholarships are available at UPES?" role="listitem">
+          <span class="topic-icon"><i class="fa-solid fa-award"></i></span>
+          <div class="topic-body">
+            <span class="topic-label">Scholarships</span>
+            <span class="topic-desc">Merit, need-based &amp; special awards</span>
+          </div>
         </button>
-        <button class="faq-chip" data-question="What are UPES placement statistics?" role="listitem">
-          <i class="fa-solid fa-briefcase"></i> Placements
-        </button>
-        <button class="faq-chip" data-question="What campus services does UPES provide?" role="listitem">
-          <i class="fa-solid fa-building-columns"></i> Campus Services
-        </button>
-        <button class="faq-chip" data-question="What is the UPES academic calendar?" role="listitem">
-          <i class="fa-solid fa-calendar-days"></i> Academic Calendar
+        <button class="topic-card" data-question="What are UPES placement statistics?" role="listitem">
+          <span class="topic-icon"><i class="fa-solid fa-chart-line"></i></span>
+          <div class="topic-body">
+            <span class="topic-label">Placements</span>
+            <span class="topic-desc">Recruiters, packages &amp; statistics</span>
+          </div>
         </button>
       </div>
     </div>
   </main>
 
-  <!-- ─── Chat State ──────────────────────────────────────────────── -->
+  <!-- ─── Chat State ──────────────────────────────────────────── -->
   <div class="chat-view" id="chat-view" aria-hidden="true">
-    <div class="messages-scroll" id="messages-scroll">
-      <div class="messages-inner" id="messages-inner" aria-live="polite" aria-label="Chat messages">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-inner">
+        <h3 class="sidebar-heading">Explore Topics</h3>
+        <nav class="sidebar-nav">
+          <button class="sidebar-link" data-question="What is the fees structure at UPES?">
+            <i class="fa-solid fa-indian-rupee-sign"></i> <span>Fees Structure</span>
+          </button>
+          <button class="sidebar-link" data-question="How does the UPES admission process work?">
+            <i class="fa-solid fa-file-pen"></i> <span>Admission Process</span>
+          </button>
+          <button class="sidebar-link" data-question="What courses and programs does UPES offer?">
+            <i class="fa-solid fa-book-open"></i> <span>Courses &amp; Programs</span>
+          </button>
+          <button class="sidebar-link" data-question="Tell me about UPES hostel facilities.">
+            <i class="fa-solid fa-bed"></i> <span>Hostel Facilities</span>
+          </button>
+          <button class="sidebar-link" data-question="What scholarships are available at UPES?">
+            <i class="fa-solid fa-award"></i> <span>Scholarships</span>
+          </button>
+          <button class="sidebar-link" data-question="What are UPES placement statistics?">
+            <i class="fa-solid fa-chart-line"></i> <span>Placements</span>
+          </button>
+          <button class="sidebar-link" data-question="What campus services does UPES provide?">
+            <i class="fa-solid fa-building-columns"></i> <span>Campus Services</span>
+          </button>
+          <button class="sidebar-link" data-question="What is the UPES academic calendar?">
+            <i class="fa-solid fa-calendar-days"></i> <span>Academic Calendar</span>
+          </button>
+        </nav>
+      </div>
+    </aside>
+    <div class="chat-main">
+      <div class="messages-scroll" id="messages-scroll">
+        <div class="messages-inner" id="messages-inner" aria-live="polite" aria-label="Chat messages">
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ─── Input Bar (shared, always pinned to bottom) ─────────────── -->
-  <div class="input-bar" id="input-bar">
-    <div class="input-wrap">
-      <div class="input-box" id="input-box">
-        <textarea id="chat-input" rows="1" placeholder="Ask about fees, admissions, scholarships…"
+  <!-- ─── Composer (shared, always pinned bottom) ─────────────── -->
+  <div class="composer" id="composer">
+    <div class="composer-inner">
+      <div class="composer-box" id="input-box">
+        <textarea id="chat-input" rows="1" placeholder="Ask about UPES…"
           aria-label="Message UPES Helper" autocomplete="off" spellcheck="true" maxlength="2000"></textarea>
-        <div class="input-controls">
-          <button class="ctrl-btn call-btn" id="call-btn" title="Call AI" aria-label="Call AI">
+        <div class="composer-actions">
+          <button class="composer-btn call-btn" id="call-btn" title="Voice call" aria-label="Voice call">
             <i class="fa-solid fa-phone"></i>
           </button>
-          <button class="ctrl-btn voice-btn" id="voice-btn" title="Voice input" aria-label="Voice input">
+          <button class="composer-btn voice-btn" id="voice-btn" title="Voice input" aria-label="Voice input">
             <i class="fa-solid fa-microphone"></i>
           </button>
-          <button class="ctrl-btn send-btn" id="send-btn" aria-label="Send message" title="Send" disabled>
+          <button class="composer-btn send-btn" id="send-btn" aria-label="Send message" title="Send" disabled>
             <i class="fa-solid fa-arrow-up"></i>
           </button>
         </div>
       </div>
-      <p class="input-hint">UPES Helper answers from its knowledge base only. Verify important info at <a
-          href="https://www.upes.ac.in" target="_blank" rel="noopener">upes.ac.in</a></p>
+      <p class="composer-note">Answers from UPES knowledge base · <a href="https://www.upes.ac.in" target="_blank"
+          rel="noopener">Verify at upes.ac.in</a></p>
     </div>
   </div>
 
-  <!-- ─── Voice Call Overlay ─────────────────────────────────── -->
+  <!-- ─── Voice Call Overlay ──────────────────────────────────── -->
   <div class="call-overlay" id="call-overlay" aria-hidden="true" role="dialog" aria-label="AI Voice Call">
     <div class="call-container">
       <div class="call-avatar-ring">
@@ -125,7 +180,7 @@
         <div class="call-ripple r2"></div>
         <div class="call-ripple r3"></div>
         <div class="call-avatar">
-          <i class="fa-solid fa-robot"></i>
+          <i class="fa-solid fa-graduation-cap"></i>
         </div>
       </div>
 
