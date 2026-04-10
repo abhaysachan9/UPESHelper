@@ -276,9 +276,6 @@ body:has(> .chat-view.active) {
   align-items: center;
   justify-content: center;
   font-size: 5.5rem;
-  margin-bottom: 1.25rem;
-
-  
 }
 
 .landing-heading {
@@ -1245,7 +1242,6 @@ body:has(> .landing:not(.hidden)) .composer-inner {
     width: 10.5rem;
     height: 10.5rem;
     font-size: 5.35rem;
-    margin-bottom: 1.5rem;
   }
 
   .hero-badge .lottie-graduation-hat {
