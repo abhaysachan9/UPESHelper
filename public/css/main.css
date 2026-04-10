@@ -320,6 +320,10 @@ body:has(> .chat-view.active) {
   gap: 0.5rem;
 }
 
+.landing-topics > [role="listitem"] {
+  display: contents;
+}
+
 .topic-card {
   display: flex;
   align-items: center;
@@ -335,12 +339,12 @@ body:has(> .chat-view.active) {
   animation: fadeInUp 0.45s var(--ease) both;
 }
 
-.topic-card:nth-child(1) { animation-delay: 0.1s; }
-.topic-card:nth-child(2) { animation-delay: 0.15s; }
-.topic-card:nth-child(3) { animation-delay: 0.2s; }
-.topic-card:nth-child(4) { animation-delay: 0.25s; }
-.topic-card:nth-child(5) { animation-delay: 0.3s; }
-.topic-card:nth-child(6) { animation-delay: 0.35s; }
+[role="listitem"]:nth-child(1) .topic-card { animation-delay: 0.1s; }
+[role="listitem"]:nth-child(2) .topic-card { animation-delay: 0.15s; }
+[role="listitem"]:nth-child(3) .topic-card { animation-delay: 0.2s; }
+[role="listitem"]:nth-child(4) .topic-card { animation-delay: 0.25s; }
+[role="listitem"]:nth-child(5) .topic-card { animation-delay: 0.3s; }
+[role="listitem"]:nth-child(6) .topic-card { animation-delay: 0.35s; }
 
 .topic-card:hover {
   border-color: var(--accent);
