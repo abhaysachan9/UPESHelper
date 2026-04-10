@@ -204,7 +204,25 @@ Configure via environment variables in `.env`:
 
 To add JavaScript-heavy pages for dynamic crawling, edit `scripts/dynamic-pages-config.js`.
 
-See [scripts/CRAWLING.md](scripts/CRAWLING.md) for detailed documentation.
+See [scripts/CRAWLING.md](scripts/CRAWLING.md) for detailed documentation, or check [DOCS-INDEX.md](DOCS-INDEX.md) for complete documentation index.
+
+---
+
+---
+
+## 📖 Documentation
+
+### Quick Links
+- **[Getting Started with Dynamic Crawling](GETTING-STARTED-DYNAMIC.md)** - 5-minute setup guide
+- **[Documentation Index](DOCS-INDEX.md)** - Complete documentation navigation
+- **[FAQ](FAQ.md)** - Common questions and troubleshooting
+- **[Architecture](ARCHITECTURE.md)** - System design and data flow
+
+### New to Dynamic Crawling?
+1. Read [GETTING-STARTED-DYNAMIC.md](GETTING-STARTED-DYNAMIC.md)
+2. Run `npm run test:dynamic`
+3. Configure `scripts/dynamic-pages-config.js`
+4. Run `npm run crawl:all`
 
 ---
 
