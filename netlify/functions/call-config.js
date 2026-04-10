@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { retrieveContext } from '../../server/services/vectorDb.js';
+import { retrieveBroadContext } from '../../server/services/vectorDb.js';
 
 const MODEL = 'gemini-3.1-flash-live-preview';
 const WS_URL =
@@ -9,6 +9,12 @@ const JSON_HEADERS = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+const LANGUAGE_NAMES = {
+    'en-IN': 'English', 'hi-IN': 'Hindi', 'es-ES': 'Spanish', 'fr-FR': 'French',
+    'de-DE': 'German', 'zh-CN': 'Chinese', 'ja-JP': 'Japanese', 'ar-SA': 'Arabic',
+    'pt-BR': 'Portuguese', 'ru-RU': 'Russian', 'ko-KR': 'Korean', 'it-IT': 'Italian',
 };
 
 export default async (req) => {
@@ -24,14 +30,25 @@ export default async (req) => {
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) throw new Error('Missing GEMINI_API_KEY');
 
-        const contextChunks = await retrieveContext(
-            'UPES university admissions fees courses programs hostel scholarships placements campus overview',
-            10,
-        );
+        const url = new URL(req.url);
+        const language = url.searchParams.get('language') || 'en-IN';
+        const languageName = LANGUAGE_NAMES[language] || 'English';
+
+        const contextChunks = await retrieveBroadContext([
+            'UPES university admissions fees courses programs scholarships',
+            'UPES Vice Chancellor Chancellor leadership administration faculty',
+            'UPES hostel accommodation campus facilities student life',
+            'UPES placements recruitment companies packages salary',
+            'UPES examinations results academic calendar important dates',
+        ], 20);
 
         const context = contextChunks
             .map((c, i) => `[${i + 1}] ${c.text}`)
             .join('\n\n');
+
+        const languageInstruction = language !== 'en-IN'
+            ? `\n- CRITICAL LANGUAGE REQUIREMENT: You MUST speak ENTIRELY in ${languageName}. Do NOT mix languages.`
+            : '';
 
         const systemInstruction = [
             'You are UPES Helper — a friendly, knowledgeable voice assistant for UPES (University of Petroleum and Energy Studies).',
@@ -42,7 +59,7 @@ export default async (req) => {
             '- If the context lacks information, say you don\'t have that detail and suggest contacting UPES at admissions@upes.ac.in or visiting upes.ac.in.',
             '- Be conversational, warm, and concise — this is a voice call, not a text chat.',
             '- Use short sentences. Avoid markdown, bullet points, or numbered lists.',
-            '- Speak naturally as if talking to a person.',
+            '- Speak naturally as if talking to a person.' + languageInstruction,
             '',
             '─── KNOWLEDGE BASE CONTEXT ───',
             context,
@@ -71,6 +88,7 @@ export default async (req) => {
                             voiceConfig: {
                                 prebuiltVoiceConfig: { voiceName: 'Aoede' },
                             },
+                            languageCode: language,
                         },
                     },
                 },

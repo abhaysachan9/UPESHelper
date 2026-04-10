@@ -1,9 +1,12 @@
 /**
  * server/services/vectorDb.js
- * Upstash Vector DB integration — query and upsert operations.
+ * Upstash Vector DB integration — query, upsert, and reranking.
  */
 
 import { Index } from '@upstash/vector';
+
+const QUERY_TIMEOUT_MS = 10_000;
+const MIN_SCORE = 0.55;
 
 let _index = null;
 
@@ -24,41 +27,125 @@ function getIndex() {
 }
 
 /**
- * Retrieve the top-k most relevant chunks for a query.
+ * Basic keyword-boost reranker.
+ * Boosts chunks that contain exact query keywords in their text, then
+ * re-sorts by the combined score.
+ */
+function rerankResults(results, query) {
+    const queryLower = query.toLowerCase();
+    const keywords = queryLower
+        .split(/\s+/)
+        .filter(w => w.length > 2)
+        .map(w => w.replace(/[^a-z0-9]/g, ''));
+
+    return results
+        .map(r => {
+            const text = (r.data || r.metadata?.text || '').toLowerCase();
+            const title = (r.metadata?.title || '').toLowerCase();
+
+            let boost = 0;
+            let keywordHits = 0;
+
+            for (const kw of keywords) {
+                if (text.includes(kw)) {
+                    keywordHits++;
+                    boost += 0.03;
+                }
+                if (title.includes(kw)) {
+                    keywordHits++;
+                    boost += 0.05;
+                }
+            }
+
+            if (queryLower.length > 3 && text.includes(queryLower)) {
+                boost += 0.08;
+            }
+            if (queryLower.length > 3 && title.includes(queryLower)) {
+                boost += 0.10;
+            }
+
+            const finalScore = Math.min(r.score + boost, 1.0);
+            return { ...r, score: finalScore, keywordHits };
+        })
+        .sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Retrieve the top-k most relevant chunks for a query, with reranking.
+ * Fetches extra candidates, applies keyword-boost reranking, and returns
+ * the final top-k results.
+ *
  * @param {string} query
  * @param {number} topK
  * @returns {Promise<Array<{text: string, metadata: object, score: number}>>}
  */
 export async function retrieveContext(query, topK = 5) {
     const index = getIndex();
+    const candidateK = Math.max(topK * 3, 15);
 
-    const results = await index.query({
-        data: query,          // Upstash auto-embeds when using 'data' instead of 'vector'
-        topK,
+    const queryPromise = index.query({
+        data: query,
+        topK: candidateK,
         includeMetadata: true,
         includeData: true,
     });
 
-    const filtered = results.filter(r => r.score > 0.6);
-    
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Vector DB query timed out')), QUERY_TIMEOUT_MS),
+    );
+
+    const results = await Promise.race([queryPromise, timeoutPromise]);
+
+    const filtered = results.filter(r => r.score > MIN_SCORE);
+    const reranked = rerankResults(filtered, query).slice(0, topK);
+
     console.log(`\n--- UPSTASH RETRIEVAL FOR: "${query}" ---`);
-    if (filtered.length === 0) {
-        console.log("No chunks found with score > 0.6");
+    if (reranked.length === 0) {
+        console.log(`No chunks found with score > ${MIN_SCORE}`);
     } else {
-        filtered.forEach((r, i) => {
-            console.log(`\n[Chunk ${i+1}] Score: ${r.score}`);
-            console.log(`Text: ${r.data || (r.metadata && r.metadata.text) ? (r.data || r.metadata.text).substring(0, 150) + "..." : "No text"}`);
-            // If you want full text, you can change substring to full text:
-            // console.log(`Text: ${r.data || r.metadata.text}`);
+        reranked.forEach((r, i) => {
+            const text = r.data || r.metadata?.text || '';
+            console.log(`[Chunk ${i + 1}] Score: ${r.score.toFixed(3)} | Hits: ${r.keywordHits || 0} | ${text.substring(0, 120)}…`);
         });
     }
-    console.log("-------------------------------------------\n");
+    console.log('-------------------------------------------\n');
 
-    return filtered.map(r => ({
+    return reranked.map(r => ({
         text: r.data || r.metadata?.text || '',
         metadata: r.metadata || {},
         score: r.score,
     }));
+}
+
+/**
+ * Run multiple diverse queries in parallel and return unique, reranked results.
+ * Used by voice call config to pre-load broad context.
+ *
+ * @param {string[]} queries
+ * @param {number} totalK - total chunks to return across all queries
+ * @returns {Promise<Array<{text: string, metadata: object, score: number}>>}
+ */
+export async function retrieveBroadContext(queries, totalK = 15) {
+    const perQuery = Math.ceil(totalK / queries.length) + 2;
+
+    const allResults = await Promise.all(
+        queries.map(q => retrieveContext(q, perQuery).catch(() => [])),
+    );
+
+    const seen = new Set();
+    const merged = [];
+    for (const results of allResults) {
+        for (const r of results) {
+            const key = r.text.substring(0, 100);
+            if (!seen.has(key)) {
+                seen.add(key);
+                merged.push(r);
+            }
+        }
+    }
+
+    merged.sort((a, b) => b.score - a.score);
+    return merged.slice(0, totalK);
 }
 
 /**

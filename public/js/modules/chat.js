@@ -90,11 +90,16 @@ async function fireQuestion(question) {
         const languageSelect = document.getElementById('language-select');
         const language = languageSelect?.value || 'en-IN';
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: question, language }),
+            signal: controller.signal,
         });
+        clearTimeout(timeout);
 
         typingEl.remove();
 
@@ -106,9 +111,12 @@ async function fireQuestion(question) {
             appendBotMessage(data.answer, data.sources || []);
             persist(question, data.answer, data.sources || []);
         }
-    } catch {
+    } catch (err) {
         typingEl.remove();
-        appendBotMessage('Network error. Please check your connection and try again.', []);
+        const msg = err?.name === 'AbortError'
+            ? 'Request timed out. Please try again with a shorter question.'
+            : 'Network error. Please check your connection and try again.';
+        appendBotMessage(msg, []);
     }
 
     scrollToBottom();

@@ -16,10 +16,16 @@ const server = http.createServer(async (req, res) => {
     await router(req, res);
   } catch (err) {
     console.error('Unhandled server error:', err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Internal Server Error' }));
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Internal Server Error' }));
+    }
   }
 });
+
+server.requestTimeout = 60_000;
+server.headersTimeout = 30_000;
+server.keepAliveTimeout = 30_000;
 
 server.listen(PORT, () => {
   console.log(`\n🚀 UPES Helper running at http://localhost:${PORT}\n`);

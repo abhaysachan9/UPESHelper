@@ -5,6 +5,8 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+const GEMINI_TIMEOUT_MS = 25_000;
+
 let _genAI = null;
 let _model = null;
 
@@ -88,7 +90,30 @@ export async function generateAnswer(question, contextChunks, language = 'en-IN'
     const model = getModel();
     const prompt = buildPrompt(question, contextChunks, language);
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    return response.text();
+    const MAX_RETRIES = 2;
+    let lastError;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        const genPromise = model.generateContent(prompt);
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Gemini API timed out after ' + (GEMINI_TIMEOUT_MS / 1000) + 's')), GEMINI_TIMEOUT_MS),
+        );
+
+        try {
+            const result = await Promise.race([genPromise, timeoutPromise]);
+            return result.response.text();
+        } catch (err) {
+            lastError = err;
+            const is429 = err.status === 429 || err.message?.includes('429');
+            if (is429 && attempt < MAX_RETRIES) {
+                const wait = (attempt + 1) * 3000;
+                console.log(`⏳ Gemini 429 — retrying in ${wait / 1000}s (attempt ${attempt + 2}/${MAX_RETRIES + 1})`);
+                await new Promise(r => setTimeout(r, wait));
+                continue;
+            }
+            throw err;
+        }
+    }
+
+    throw lastError;
 }

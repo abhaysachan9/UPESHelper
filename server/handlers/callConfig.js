@@ -5,7 +5,7 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
-import { retrieveContext } from '../services/vectorDb.js';
+import { retrieveBroadContext } from '../services/vectorDb.js';
 import { URL } from 'url';
 
 const MODEL = 'gemini-3.1-flash-live-preview';
@@ -51,10 +51,13 @@ export async function handleCallConfig(req, res) {
         const language = url.searchParams.get('language') || 'en-IN';
         const languageName = LANGUAGE_NAMES[language] || 'English';
 
-        const contextChunks = await retrieveContext(
-            'UPES university admissions fees courses programs hostel scholarships placements campus overview',
-            10,
-        );
+        const contextChunks = await retrieveBroadContext([
+            'UPES university admissions fees courses programs scholarships',
+            'UPES Vice Chancellor Chancellor leadership administration faculty',
+            'UPES hostel accommodation campus facilities student life',
+            'UPES placements recruitment companies packages salary',
+            'UPES examinations results academic calendar important dates',
+        ], 20);
 
         const context = contextChunks
             .map((c, i) => `[${i + 1}] ${c.text}`)

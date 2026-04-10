@@ -18,7 +18,7 @@ export default async (req) => {
 
     try {
         const body = await req.json();
-        const { message } = body;
+        const { message, language } = body;
 
         if (!message || typeof message !== 'string' || !message.trim()) {
             return new Response(JSON.stringify({ error: '"message" field is required' }), {
@@ -28,7 +28,8 @@ export default async (req) => {
         }
 
         const question = message.trim();
-        console.log(`\n💬 [Netlify Function] User: ${question}`);
+        const userLanguage = language || 'en-IN';
+        console.log(`\n💬 [Netlify Function] User: ${question} [${userLanguage}]`);
 
         const contextChunks = await retrieveContext(question);
 
@@ -42,7 +43,7 @@ export default async (req) => {
             });
         }
 
-        const answer = await generateAnswer(question, contextChunks);
+        const answer = await generateAnswer(question, contextChunks, userLanguage);
         const seenUrls = new Set();
         const sources = contextChunks
             .filter(c => c.metadata?.url && !seenUrls.has(c.metadata.url) && seenUrls.add(c.metadata.url))
@@ -55,7 +56,10 @@ export default async (req) => {
 
     } catch (err) {
         console.error('Netlify Chat handler error:', err);
-        return new Response(JSON.stringify({ error: 'Failed to generate a response. Please try again.' }), {
+        const msg = err.message?.includes('timed out')
+            ? 'Request timed out. Please try again.'
+            : 'Failed to generate a response. Please try again.';
+        return new Response(JSON.stringify({ error: msg }), {
             status: 500,
             headers: JSON_HEADERS,
         });

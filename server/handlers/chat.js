@@ -74,7 +74,12 @@ export async function handleChat(req, res) {
         return jsonResponse(res, 200, { answer, sources });
     } catch (err) {
         console.error('Chat handler error:', err);
-        return jsonResponse(res, 500, { error: 'Failed to generate a response. Please try again.' });
+        const is429 = err.status === 429 || err.message?.includes('429');
+        const isTimeout = err.message?.includes('timed out');
+        let userMsg = 'Failed to generate a response. Please try again.';
+        if (is429) userMsg = 'The AI service is temporarily busy. Please wait a moment and try again.';
+        if (isTimeout) userMsg = 'The request took too long. Please try again with a simpler question.';
+        return jsonResponse(res, is429 ? 429 : 500, { error: userMsg });
     }
 }
 
