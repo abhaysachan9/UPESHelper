@@ -10,6 +10,7 @@
     "build": "echo 'Building for Netlify: No compilation needed for vanilla JS frontend.'",
     "crawl": "node scripts/crawl.js",
     "crawl:dynamic": "node scripts/crawlDynamic.js",
+    "crawl:dynamic:sitemap": "node scripts/crawlDynamicSitemap.js",
     "crawl:all": "npm run crawl && npm run crawl:dynamic",
     "test:dynamic": "node scripts/testDynamic.js",
     "index": "node scripts/index.js",

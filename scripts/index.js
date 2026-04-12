@@ -56,22 +56,26 @@ function clearProgress() {
 // ─── Indexer ──────────────────────────────────────────────────────────────────
 
 async function index() {
-    if (!fs.existsSync(INPUT_FILE)) {
-        console.error(`❌  No crawled data found at: ${INPUT_FILE}`);
-        console.error('   Run "npm run crawl" first.');
+    const hasStatic = fs.existsSync(INPUT_FILE);
+    const hasDynamic = fs.existsSync(DYNAMIC_INPUT_FILE);
+
+    if (!hasStatic && !hasDynamic) {
+        console.error(`❌  No crawled data found.`);
+        console.error('   Run "npm run crawl" or "npm run crawl:dynamic:sitemap" first.');
         process.exit(1);
     }
 
-    const pages = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
-    
-    // Load dynamic pages if they exist
-    let dynamicPages = [];
-    if (fs.existsSync(DYNAMIC_INPUT_FILE)) {
-        dynamicPages = JSON.parse(fs.readFileSync(DYNAMIC_INPUT_FILE, 'utf-8'));
-        console.log(`📄  Found ${dynamicPages.length} dynamic pages to index`);
-    }
-    
-    // Combine static and dynamic pages
+    const pages = hasStatic
+        ? JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'))
+        : [];
+
+    const dynamicPages = hasDynamic
+        ? JSON.parse(fs.readFileSync(DYNAMIC_INPUT_FILE, 'utf-8'))
+        : [];
+
+    if (hasStatic) console.log(`📄  Found ${pages.length} static pages`);
+    if (hasDynamic) console.log(`📄  Found ${dynamicPages.length} dynamic pages`);
+
     const allPages = [...pages, ...dynamicPages];
     console.log(`📄  Total pages to index: ${allPages.length} (${pages.length} static + ${dynamicPages.length} dynamic)`);
 

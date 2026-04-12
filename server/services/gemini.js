@@ -71,6 +71,11 @@ RULES:
 - If the context doesn't contain enough information to answer, respond appropriately in the user's language saying you don't have that information and suggest contacting UPES at admissions@upes.ac.in or visiting upes.ac.in.
 - Be highly detailed, thorough, and provide comprehensive information from the context. Do not be vague or brief! 
 - Format your answer in clear, readable markdown. Use bullet points and headers to organize the response extensively where applicable.
+- When presenting tabular data (fees, comparisons, schedules, etc.), you MUST use proper markdown tables with the header separator row. Example:
+  | Column 1 | Column 2 |
+  | --- | --- |
+  | Data | Data |
+- Use bullet lists with "- " prefix (NOT "* " prefix) to avoid formatting conflicts.
 - Do NOT mention "context", "documents", or "chunks" in your response.${languageInstruction}
 
 ─── KNOWLEDGE BASE CONTEXT ───────────────────────────────────────────

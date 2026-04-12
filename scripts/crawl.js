@@ -79,24 +79,46 @@ function extractMeta($) {
 }
 
 /**
- * Convert a <table> element to readable plain text.
+ * Convert a <table> element to a proper markdown table with header separator.
  */
 function tableToText($, table) {
-  const rows = [];
+  const allRows = [];
+  let headerCount = 0;
+
   $(table)
     .find("tr")
     .each((_, tr) => {
       const cells = [];
+      const isHeader = $(tr).find("th").length > 0;
       $(tr)
         .find("th, td")
         .each((_, cell) => {
           cells.push($(cell).text().replace(/\s+/g, " ").trim());
         });
       if (cells.some((c) => c.length > 0)) {
-        rows.push(cells.join(" | "));
+        allRows.push({ cells, isHeader });
+        if (isHeader) headerCount++;
       }
     });
-  return rows.join("\n");
+
+  if (allRows.length === 0) return "";
+
+  const colCount = Math.max(...allRows.map((r) => r.cells.length));
+  const pad = (arr) => {
+    while (arr.length < colCount) arr.push("");
+    return arr;
+  };
+
+  const lines = [];
+  const firstRow = allRows[0];
+  lines.push("| " + pad(firstRow.cells).join(" | ") + " |");
+  lines.push("| " + Array(colCount).fill("---").join(" | ") + " |");
+
+  for (let i = 1; i < allRows.length; i++) {
+    lines.push("| " + pad(allRows[i].cells).join(" | ") + " |");
+  }
+
+  return lines.join("\n");
 }
 
 /**
