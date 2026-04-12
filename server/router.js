@@ -6,7 +6,7 @@
 import { serveStatic } from './static.js';
 import { handleChat } from './handlers/chat.js';
 import { handleHealth } from './handlers/health.js';
-import { handleCallConfig } from './handlers/callConfig.js';
+import { handleCallConfig, handleCallSearch } from './handlers/callConfig.js';
 
 export async function router(req, res) {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -26,6 +26,10 @@ export async function router(req, res) {
 
     if (pathname === '/api/call-config' && (method === 'GET' || method === 'OPTIONS')) {
         return handleCallConfig(req, res);
+    }
+
+    if (pathname === '/api/call-search' && (method === 'POST' || method === 'OPTIONS')) {
+        return handleCallSearch(req, res);
     }
 
     if (pathname === '/api/health' && method === 'GET') {

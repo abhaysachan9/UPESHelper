@@ -202,6 +202,11 @@ function onWsMessage(event) {
     const msg = parseWsMessage(event.data);
     if (!msg) return;
 
+    if (msg.toolCall) {
+        handleToolCall(msg.toolCall);
+        return;
+    }
+
     const sc = msg.serverContent;
     if (!sc) return;
 
@@ -218,6 +223,55 @@ function onWsMessage(event) {
     }
     if (sc.outputTranscription?.text) {
         appendTranscript('ai', sc.outputTranscription.text);
+    }
+}
+
+async function handleToolCall(toolCall) {
+    if (!toolCall.functionCalls) return;
+
+    const functionResponses = [];
+
+    for (const fc of toolCall.functionCalls) {
+        if (fc.name === 'search_knowledge_base') {
+            const query = fc.args?.query || '';
+            console.log(`[Call] Tool call: search_knowledge_base("${query}")`);
+
+            try {
+                const res = await fetch('/api/call-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query }),
+                });
+                const data = await res.json();
+                console.log(`[Call] Search returned ${data.count} chunks`);
+
+                functionResponses.push({
+                    id: fc.id,
+                    name: fc.name,
+                    response: {
+                        result: data.results || 'No information found in the knowledge base for this query.',
+                    },
+                });
+            } catch (err) {
+                console.error('[Call] Search failed:', err);
+                functionResponses.push({
+                    id: fc.id,
+                    name: fc.name,
+                    response: { result: 'Search temporarily unavailable. Please suggest the user try again.' },
+                });
+            }
+        } else {
+            functionResponses.push({
+                id: fc.id,
+                name: fc.name,
+                response: { result: 'Unknown function' },
+            });
+        }
+    }
+
+    if (functionResponses.length > 0 && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ toolResponse: { functionResponses } }));
+        console.log('[Call] Sent tool response back to Gemini');
     }
 }
 

@@ -5,6 +5,23 @@ const MODEL = 'gemini-3.1-flash-live-preview';
 const WS_URL =
     'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained';
 
+const SEARCH_TOOL = {
+    functionDeclarations: [{
+        name: 'search_knowledge_base',
+        description: 'Search the UPES knowledge base for specific information. Use this tool whenever the user asks about something not covered in your pre-loaded context, such as specific fee structures, course details, admission criteria, scholarship details, hostel fees, exam schedules, or any specific factual question about UPES.',
+        parameters: {
+            type: 'OBJECT',
+            properties: {
+                query: {
+                    type: 'STRING',
+                    description: 'The search query to look up in the UPES knowledge base. Use the user\'s question rephrased as a clear search query.',
+                },
+            },
+            required: ['query'],
+        },
+    }],
+};
+
 const JSON_HEADERS = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
@@ -55,15 +72,17 @@ export default async (req) => {
             'You are on a live voice call with a student or prospective student.',
             '',
             'RULES:',
-            '- Answer ONLY from the provided knowledge base context below.',
-            '- If the context lacks information, say you don\'t have that detail and suggest contacting UPES at admissions@upes.ac.in or visiting upes.ac.in.',
+            '- You have a search_knowledge_base tool. Use it whenever the user asks about specific topics like fees, courses, admission details, scholarships, hostel information, placements, exam schedules, or any factual question about UPES that needs precise data.',
+            '- When you decide to search, say something natural like "Let me look that up for you" or "One moment, let me check that" BEFORE calling the tool.',
+            '- After getting search results, answer based on what you found. If the search returns no results, say you don\'t have that detail and suggest contacting UPES at admissions@upes.ac.in or visiting upes.ac.in.',
+            '- You also have some pre-loaded general context below for quick answers to common questions.',
             '- Be conversational, warm, and concise — this is a voice call, not a text chat.',
             '- Use short sentences. Avoid markdown, bullet points, or numbered lists.',
             '- Speak naturally as if talking to a person.' + languageInstruction,
             '',
-            '─── KNOWLEDGE BASE CONTEXT ───',
+            '─── PRE-LOADED GENERAL CONTEXT ───',
             context,
-            '──────────────────────────────',
+            '──────────────────────────────────',
         ].join('\n');
 
         const client = new GoogleGenAI({
@@ -84,6 +103,7 @@ export default async (req) => {
                     config: {
                         responseModalities: ['AUDIO'],
                         systemInstruction,
+                        tools: [SEARCH_TOOL],
                         speechConfig: {
                             voiceConfig: {
                                 prebuiltVoiceConfig: { voiceName: 'Aoede' },
