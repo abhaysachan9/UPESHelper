@@ -1,9 +1,11 @@
 /**
  * server/services/gemini.js
  * Google Gemini API integration for answer generation.
+ * Falls back to Ollama Cloud (qwen3-coder-next) when Gemini is unavailable.
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateWithOllama } from "./ollama.js";
 
 const GEMINI_TIMEOUT_MS = 25_000;
 
@@ -99,9 +101,36 @@ export async function generateAnswer(
   contextChunks,
   language = "en-IN",
 ) {
-  const model = getModel();
   const prompt = buildPrompt(question, contextChunks, language);
 
+  // Try Gemini first
+  try {
+    return await generateWithGemini(prompt);
+  } catch (geminiErr) {
+    console.warn(`⚠️ Gemini failed: ${geminiErr.message}`);
+
+    // Fall back to Ollama Cloud
+    if (process.env.OLLAMA_KEY) {
+      console.log("🔄 Falling back to Ollama Cloud (qwen3-coder-next)...");
+      try {
+        const answer = await generateWithOllama(prompt);
+        console.log("✅ Ollama Cloud fallback succeeded");
+        return answer;
+      } catch (ollamaErr) {
+        console.error(`❌ Ollama Cloud fallback also failed: ${ollamaErr.message}`);
+        throw geminiErr;
+      }
+    }
+
+    throw geminiErr;
+  }
+}
+
+/**
+ * Attempt generation with Gemini, with retries on 429.
+ */
+async function generateWithGemini(prompt) {
+  const model = getModel();
   const MAX_RETRIES = 2;
   let lastError;
 
