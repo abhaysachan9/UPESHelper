@@ -350,9 +350,9 @@ node scripts/crawl.js
 ## 📚 Documentation
 
 - **Detailed crawling docs:** [CRAWLING.md](CRAWLING.md)
-- **Setup guide:** [../SETUP-DYNAMIC-CRAWLING.md](../SETUP-DYNAMIC-CRAWLING.md)
-- **FAQ:** [../FAQ.md](../FAQ.md)
-- **Architecture:** [../ARCHITECTURE.md](../ARCHITECTURE.md)
+- **Setup guide:** [../docs/SETUP-DYNAMIC-CRAWLING.md](../docs/SETUP-DYNAMIC-CRAWLING.md)
+- **FAQ:** [../docs/FAQ.md](../docs/FAQ.md)
+- **Architecture:** [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
 
 ## 🎯 Best Practices
 
@@ -394,4 +394,4 @@ project/
 
 ---
 
-**Need help?** Check [../DOCS-INDEX.md](../DOCS-INDEX.md) for complete documentation.
+**Need help?** Check [../docs/DOCS-INDEX.md](../docs/DOCS-INDEX.md) for complete documentation.

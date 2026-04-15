@@ -34,7 +34,7 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
   - Component relationships
   - Decision trees
 
-- **[README.md](README.md)**
+- **[README.md](../README.md)**
   - Project overview
   - Main features
   - API endpoints
@@ -42,7 +42,7 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
 
 ### Detailed Guides
 
-- **[scripts/CRAWLING.md](scripts/CRAWLING.md)**
+- **[scripts/CRAWLING.md](../scripts/CRAWLING.md)**
   - Crawling modes explained
   - Configuration options
   - Performance comparison
@@ -58,20 +58,20 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
 
 ### Config Files
 
-- **[scripts/dynamic-pages-config.js](scripts/dynamic-pages-config.js)**
+- **[scripts/dynamic-pages-config.js](../scripts/dynamic-pages-config.js)**
   - Main configuration file
   - Define dynamic pages
   - URL patterns
   - Helper functions
 
-- **[scripts/dynamic-pages-config.example.js](scripts/dynamic-pages-config.example.js)**
+- **[scripts/dynamic-pages-config.example.js](../scripts/dynamic-pages-config.example.js)**
   - Example configuration
   - Usage patterns
   - Best practices
 
 ### Environment Variables
 
-- **[.env.example](.env.example)**
+- **[.env.example](../.env.example)**
   - Environment template
   - Required variables
   - Optional settings
@@ -80,24 +80,24 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
 
 ### Crawler Scripts
 
-- **[scripts/crawl.js](scripts/crawl.js)**
+- **[scripts/crawl.js](../scripts/crawl.js)**
   - Static crawler (Cheerio)
   - Sitemap parsing
   - HTML extraction
 
-- **[scripts/crawlDynamic.js](scripts/crawlDynamic.js)**
+- **[scripts/crawlDynamic.js](../scripts/crawlDynamic.js)**
   - Dynamic crawler (Puppeteer)
   - JavaScript rendering
   - Browser automation
 
-- **[scripts/testDynamic.js](scripts/testDynamic.js)**
+- **[scripts/testDynamic.js](../scripts/testDynamic.js)**
   - Test Puppeteer setup
   - Verify installation
   - Quick diagnostics
 
 ### Indexing Scripts
 
-- **[scripts/index.js](scripts/index.js)**
+- **[scripts/index.js](../scripts/index.js)**
   - Combine crawled data
   - Chunk content
   - Upload to Upstash
@@ -129,8 +129,8 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
 
 #### Understand how it works
 1. [ARCHITECTURE.md](ARCHITECTURE.md)
-2. [scripts/CRAWLING.md](scripts/CRAWLING.md)
-3. [README.md](README.md)
+2. [scripts/CRAWLING.md](../scripts/CRAWLING.md)
+3. [README.md](../README.md)
 
 #### Upgrade an existing project
 1. [MIGRATION-GUIDE.md](MIGRATION-GUIDE.md)
@@ -143,18 +143,18 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
 3. [CHECKLIST.md](CHECKLIST.md) (verify setup)
 
 #### Configure dynamic pages
-1. [scripts/dynamic-pages-config.example.js](scripts/dynamic-pages-config.example.js)
-2. [scripts/CRAWLING.md](scripts/CRAWLING.md) (Configuration section)
+1. [scripts/dynamic-pages-config.example.js](../scripts/dynamic-pages-config.example.js)
+2. [scripts/CRAWLING.md](../scripts/CRAWLING.md) (Configuration section)
 3. [FAQ.md](FAQ.md) (Configuration questions)
 
 #### Optimize performance
-1. [scripts/CRAWLING.md](scripts/CRAWLING.md) (Performance section)
+1. [scripts/CRAWLING.md](../scripts/CRAWLING.md) (Performance section)
 2. [FAQ.md](FAQ.md) (Performance questions)
 3. [ARCHITECTURE.md](ARCHITECTURE.md) (Performance comparison)
 
 #### Learn advanced techniques
 1. [FAQ.md](FAQ.md) (Advanced questions)
-2. [scripts/crawlDynamic.js](scripts/crawlDynamic.js) (code examples)
+2. [scripts/crawlDynamic.js](../scripts/crawlDynamic.js) (code examples)
 3. [SETUP-DYNAMIC-CRAWLING.md](SETUP-DYNAMIC-CRAWLING.md) (Advanced configuration)
 
 ## 📊 Documentation by Level
@@ -167,14 +167,14 @@ Complete guide to dynamic crawling documentation. Start here to find what you ne
 
 ### Intermediate (Understanding the System)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
-- [scripts/CRAWLING.md](scripts/CRAWLING.md)
+- [scripts/CRAWLING.md](../scripts/CRAWLING.md)
 - [FAQ.md](FAQ.md)
-- [README.md](README.md)
+- [README.md](../README.md)
 
 ### Advanced (Customization & Optimization)
-- [scripts/crawlDynamic.js](scripts/crawlDynamic.js) (source code)
-- [scripts/crawl.js](scripts/crawl.js) (source code)
-- [scripts/index.js](scripts/index.js) (source code)
+- [scripts/crawlDynamic.js](../scripts/crawlDynamic.js) (source code)
+- [scripts/crawl.js](../scripts/crawl.js) (source code)
+- [scripts/index.js](../scripts/index.js) (source code)
 - [FAQ.md](FAQ.md) (Advanced section)
 
 ## 🔍 Quick Lookup
@@ -214,7 +214,7 @@ export const DYNAMIC_PAGES = [ /* URLs */ ];
 export const DYNAMIC_PAGE_PATTERNS = [ /* Regex */ ];
 ```
 
-See: [scripts/CRAWLING.md](scripts/CRAWLING.md#configuration)
+See: [scripts/CRAWLING.md](../scripts/CRAWLING.md#configuration)
 
 ## 🆘 Troubleshooting
 
@@ -272,7 +272,7 @@ See: [CHECKLIST.md](CHECKLIST.md)
 ### Path 2: Deep Understanding (2 hours)
 1. Quick start (30 min)
 2. Read: [ARCHITECTURE.md](ARCHITECTURE.md) (30 min)
-3. Read: [scripts/CRAWLING.md](scripts/CRAWLING.md) (30 min)
+3. Read: [scripts/CRAWLING.md](../scripts/CRAWLING.md) (30 min)
 4. Read: [FAQ.md](FAQ.md) (30 min)
 
 ### Path 3: Expert Level (4+ hours)
