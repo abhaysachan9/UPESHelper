@@ -46,7 +46,7 @@ export async function initCall() {
     try {
         const res = await fetch('/api/call-enabled');
         const data = await res.json();
-        if (data.enabled) callBtn.style.display = '';
+        if (data.enabled) callBtn.style.display = 'flex';
     } catch { /* leave hidden */ }
 }
 

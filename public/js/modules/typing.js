@@ -38,8 +38,18 @@ export function initTyping() {
         timer = setTimeout(tick, delay);
     }
 
-    input.addEventListener('focus', () => clearTimeout(timer));
-    input.addEventListener('blur', () => tick());
+    input.addEventListener('focus', () => {
+        clearTimeout(timer);
+        input.placeholder = '';
+    });
+    input.addEventListener('blur', () => {
+        if (!input.value.trim()) {
+            char = 0;
+            deleting = false;
+            idx = (idx + 1) % PROMPTS.length;
+            tick();
+        }
+    });
 
     tick();
 }

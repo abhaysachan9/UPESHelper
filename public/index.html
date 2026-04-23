@@ -205,9 +205,6 @@
         <textarea id="chat-input" rows="1" placeholder="Ask about admissions, fees, placements…"
           aria-label="Message UPES Helper" autocomplete="off" spellcheck="true" maxlength="2000"></textarea>
         <div class="composer-actions">
-          <button class="composer-btn call-btn" id="call-btn" title="Voice call" aria-label="Voice call">
-            <i class="fa-solid fa-phone"></i>
-          </button>
           <button class="composer-btn voice-btn" id="voice-btn" title="Voice input" aria-label="Voice input">
             <i class="fa-solid fa-microphone"></i>
           </button>
@@ -220,6 +217,12 @@
           rel="noopener">Verify at upes.ac.in</a></p>
     </div>
   </div>
+
+  <!-- ─── Floating Call FAB ─────────────────────────────────────── -->
+  <button class="call-fab" id="call-btn" title="Voice call" aria-label="Start AI voice call">
+    <span class="call-fab-pulse"></span>
+    <i class="fa-solid fa-phone"></i>
+  </button>
 
   <!-- ─── Voice Call Overlay ──────────────────────────────────── -->
   <div class="call-overlay" id="call-overlay" aria-hidden="true" role="dialog" aria-label="AI Voice Call">

@@ -927,25 +927,90 @@ body:has(> .landing:not(.hidden)) .composer-inner {
   animation: pulse 1s infinite;
 }
 
-.call-btn {
-  color: var(--accent);
-  position: relative;
+/* ── Floating Call FAB ──────────────────────────────────────── */
+.call-fab {
+  position: fixed;
+  bottom: 6.5rem;
+  right: 1.25rem;
+  z-index: 900;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #fff;
+  background: linear-gradient(135deg, #2563EB, #3B82F6);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35), 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease);
 }
 
-.call-btn:hover {
-  background: var(--accent-soft);
+.call-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
 }
 
-.call-btn::after {
+.call-fab:active {
+  transform: scale(0.96);
+}
+
+.call-fab-pulse {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid rgba(37, 99, 235, 0.4);
+  animation: fabPulse 2.5s infinite ease-out;
+  pointer-events: none;
+}
+
+.call-fab::after {
   content: '';
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
   background: #22C55E;
   border-radius: 50%;
   top: 2px;
   right: 2px;
-  border: 1.5px solid var(--surface);
+  border: 2px solid var(--surface);
+  z-index: 1;
+}
+
+[data-theme="dark"] .call-fab {
+  background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .call-fab:hover {
+  box-shadow: 0 6px 24px rgba(96, 165, 250, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #2563EB, #3B82F6);
+}
+
+[data-theme="dark"] .call-fab::after {
+  border-color: var(--bg);
+}
+
+[data-theme="dark"] .call-fab-pulse {
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+@keyframes fabPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
 }
 
 .send-btn {
@@ -1564,5 +1629,47 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 
   .call-transcription {
     max-height: 110px;
+  }
+
+  .call-fab {
+    bottom: 5.5rem;
+    right: 1rem;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+
+  .call-fab::after {
+    width: 7px;
+    height: 7px;
+  }
+}
+
+/* ── 15b. Floating Call FAB — Small screens ───────────────── */
+@media (max-width: 400px) {
+  .call-fab {
+    bottom: 5rem;
+    right: 0.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 0.9rem;
+  }
+
+  .call-fab::after {
+    width: 6px;
+    height: 6px;
+    top: 1px;
+    right: 1px;
+  }
+}
+
+/* ── 15c. Floating Call FAB — Desktop ─────────────────────── */
+@media (min-width: 1024px) {
+  .call-fab {
+    bottom: 6.5rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.15rem;
   }
 }
