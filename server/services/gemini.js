@@ -1,7 +1,7 @@
 /**
  * server/services/gemini.js
  * Google Gemini API integration for answer generation.
- * Falls back to Ollama Cloud (qwen3-coder-next) when Gemini is unavailable.
+ * Fallback chain: gemini-3.1-flash-lite-preview → gemini-2.5-flash → Ollama Cloud (qwen3-coder-next).
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -9,11 +9,14 @@ import { generateWithOllama } from "./ollama.js";
 
 const GEMINI_TIMEOUT_MS = 25_000;
 
-let _genAI = null;
-let _model = null;
+const PRIMARY_MODEL = "gemini-3.1-flash-lite-preview";
+const FALLBACK_MODEL = "gemini-2.5-flash";
 
-function getModel() {
-  if (_model) return _model;
+let _genAI = null;
+const _modelCache = new Map();
+
+function getGenAI() {
+  if (_genAI) return _genAI;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -21,10 +24,14 @@ function getModel() {
   }
 
   _genAI = new GoogleGenerativeAI(apiKey);
-  _model = _genAI.getGenerativeModel({
-    model: "gemini-3.1-flash-lite-preview",
-  });
-  return _model;
+  return _genAI;
+}
+
+function getModel(modelName) {
+  if (_modelCache.has(modelName)) return _modelCache.get(modelName);
+  const model = getGenAI().getGenerativeModel({ model: modelName });
+  _modelCache.set(modelName, model);
+  return model;
 }
 
 // Language code to language name mapping
@@ -103,13 +110,24 @@ export async function generateAnswer(
 ) {
   const prompt = buildPrompt(question, contextChunks, language);
 
-  // Try Gemini first
+  let primaryErr;
   try {
-    return await generateWithGemini(prompt);
-  } catch (geminiErr) {
-    console.warn(`⚠️ Gemini failed: ${geminiErr.message}`);
+    return await generateWithGemini(prompt, PRIMARY_MODEL);
+  } catch (err) {
+    primaryErr = err;
+    console.warn(`⚠️ Gemini (${PRIMARY_MODEL}) failed: ${err.message}`);
+  }
 
-    // Fall back to Ollama Cloud
+  try {
+    console.log(`🔄 Falling back to Gemini (${FALLBACK_MODEL})...`);
+    const answer = await generateWithGemini(prompt, FALLBACK_MODEL);
+    console.log(`✅ Gemini (${FALLBACK_MODEL}) fallback succeeded`);
+    return answer;
+  } catch (fallbackErr) {
+    console.warn(
+      `⚠️ Gemini (${FALLBACK_MODEL}) fallback failed: ${fallbackErr.message}`,
+    );
+
     if (process.env.OLLAMA_KEY) {
       console.log("🔄 Falling back to Ollama Cloud (qwen3-coder-next)...");
       try {
@@ -117,54 +135,36 @@ export async function generateAnswer(
         console.log("✅ Ollama Cloud fallback succeeded");
         return answer;
       } catch (ollamaErr) {
-        console.error(`❌ Ollama Cloud fallback also failed: ${ollamaErr.message}`);
-        throw geminiErr;
+        console.error(
+          `❌ Ollama Cloud fallback also failed: ${ollamaErr.message}`,
+        );
+        throw primaryErr;
       }
     }
 
-    throw geminiErr;
+    throw primaryErr;
   }
 }
 
 /**
- * Attempt generation with Gemini, with retries on 429.
+ * Attempt a single generation with the specified Gemini model.
+ * No internal retries — caller is responsible for falling back to another model.
  */
-async function generateWithGemini(prompt) {
-  const model = getModel();
-  const MAX_RETRIES = 2;
-  let lastError;
-
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const genPromise = model.generateContent(prompt);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(
-        () =>
-          reject(
-            new Error(
-              "Gemini API timed out after " + GEMINI_TIMEOUT_MS / 1000 + "s",
-            ),
+async function generateWithGemini(prompt, modelName) {
+  const model = getModel(modelName);
+  const genPromise = model.generateContent(prompt);
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () =>
+        reject(
+          new Error(
+            `Gemini (${modelName}) timed out after ${GEMINI_TIMEOUT_MS / 1000}s`,
           ),
-        GEMINI_TIMEOUT_MS,
-      ),
-    );
+        ),
+      GEMINI_TIMEOUT_MS,
+    ),
+  );
 
-    try {
-      const result = await Promise.race([genPromise, timeoutPromise]);
-      return result.response.text();
-    } catch (err) {
-      lastError = err;
-      const is429 = err.status === 429 || err.message?.includes("429");
-      if (is429 && attempt < MAX_RETRIES) {
-        const wait = (attempt + 1) * 3000;
-        console.log(
-          `⏳ Gemini 429 — retrying in ${wait / 1000}s (attempt ${attempt + 2}/${MAX_RETRIES + 1})`,
-        );
-        await new Promise((r) => setTimeout(r, wait));
-        continue;
-      }
-      throw err;
-    }
-  }
-
-  throw lastError;
+  const result = await Promise.race([genPromise, timeoutPromise]);
+  return result.response.text();
 }
