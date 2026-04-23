@@ -829,6 +829,10 @@ body:has(> .chat-view.active) {
 /* ── 9. Composer (pinned bottom) ───────────────────────────── */
 .composer {
   flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   padding: 0.5rem 1rem;
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   background: var(--bg);
@@ -931,7 +935,7 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 .call-fab {
   position: fixed;
   right: 16px;
-  bottom: calc(75px + env(safe-area-inset-bottom));
+  bottom: calc(80px + env(safe-area-inset-bottom));
   z-index: 900;
   width: 3.25rem;
   height: 3.25rem;
