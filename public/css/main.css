@@ -854,6 +854,8 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 
 .composer-box {
   display: flex;
+  position: fixed;
+  bottom: 0;
   align-items: flex-end;
   gap: 0.375rem;
   background: var(--surface);
@@ -930,7 +932,7 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 /* ── Floating Call FAB ──────────────────────────────────────── */
 .call-fab {
   position: fixed;
-  bottom: 6.5rem;
+  bottom: 80px;
   right: 1.25rem;
   z-index: 900;
   width: 3.25rem;
