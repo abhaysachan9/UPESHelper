@@ -31,8 +31,9 @@ if (fs.existsSync(envPath)) {
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const PAGES_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
-const DYNAMIC_PAGES_FILE = path.join(rootDir, 'crawled-data', 'pages-dynamic.json');
+const SITEMAP_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
+const LIST_FILE = path.join(rootDir, 'crawled-data', 'pages-list.json');
+const FEES_FILE = path.join(rootDir, 'crawled-data', 'pages-fees.json');
 const PROGRESS_FILE = path.join(rootDir, 'crawled-data', 'index-progress.json');
 
 function loadProgress() {
@@ -50,26 +51,31 @@ function saveProgress(indexedIds) {
 async function indexSinglePage(url) {
     console.log(`\n📄  Indexing single page: ${url}\n`);
 
-    // Load all pages
+    // Load all pages from every crawl source
     let allPages = [];
-    
-    if (fs.existsSync(PAGES_FILE)) {
-        const pages = JSON.parse(fs.readFileSync(PAGES_FILE, 'utf-8'));
+
+    if (fs.existsSync(SITEMAP_FILE)) {
+        const pages = JSON.parse(fs.readFileSync(SITEMAP_FILE, 'utf-8'));
         allPages.push(...pages);
     }
-    
-    if (fs.existsSync(DYNAMIC_PAGES_FILE)) {
-        const dynamicPages = JSON.parse(fs.readFileSync(DYNAMIC_PAGES_FILE, 'utf-8'));
-        allPages.push(...dynamicPages);
+
+    if (fs.existsSync(LIST_FILE)) {
+        const listPages = JSON.parse(fs.readFileSync(LIST_FILE, 'utf-8'));
+        allPages.push(...listPages);
+    }
+
+    if (fs.existsSync(FEES_FILE)) {
+        const feePages = JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8'));
+        allPages.push(...feePages);
     }
 
     // Find the page
     const page = allPages.find(p => p.url === url);
-    
+
     if (!page) {
         console.error(`   ❌ Page not found in crawled data: ${url}`);
         console.error('   Make sure you have crawled this page first.');
-        console.error('   Run: npm run crawl:dynamic');
+        console.error('   Run: npm run crawl:sitemap  (or crawl:fees / crawl:dynamic)');
         process.exit(1);
     }
 

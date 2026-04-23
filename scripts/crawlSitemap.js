@@ -1,14 +1,27 @@
 /**
- * scripts/crawlDynamicSitemap.js
- * Puppeteer-based crawler that reads URLs from sitemap.xml (like crawl.js)
- * but renders pages with a real browser for JS-heavy content.
+ * scripts/crawlSitemap.js
+ * Primary crawler for the UPES site. Reads URLs from sitemap.xml and renders
+ * each page with Puppeteer (so JS-heavy pages produce real content), then
+ * writes the result to crawled-data/pages.json.
  *
- * Maintains crawl progress so interrupted runs can be resumed.
+ * Maintains crawl progress in crawled-data/crawl-progress.json so an
+ * interrupted run can be resumed without re-fetching everything.
+ *
+ * The interactive fee-structure SPA is intentionally skipped here — it's
+ * handled by `npm run crawl:fees` which enumerates every (school × level ×
+ * course) combination. Crawling it generically would only capture the
+ * default Petroleum view and pollute search results.
  *
  * Usage:
- *   node scripts/crawlDynamicSitemap.js              ← crawl from sitemap
- *   CRAWL_MODE=urllist node scripts/crawlDynamicSitemap.js  ← crawl manual list
- *   node scripts/crawlDynamicSitemap.js --fresh       ← discard progress, start over
+ *   node scripts/crawlSitemap.js                  ← crawl from sitemap (resumable)
+ *   node scripts/crawlSitemap.js --fresh          ← discard progress, start over
+ *   CRAWL_MODE=urllist node scripts/crawlSitemap.js  ← crawl MANUAL_URLS instead
+ *
+ * Env vars:
+ *   SITEMAP_URL            — default https://www.upes.ac.in/sitemap.xml
+ *   MAX_PAGES              — cap on URLs (default 100)
+ *   DYNAMIC_CONCURRENCY    — parallel browser tabs (default 10)
+ *   PUPPETEER_HEADLESS     — "false" to run with a visible browser
  */
 
 import fs from "fs";
@@ -58,12 +71,18 @@ const MAX_TEXT_LENGTH = 25_000;
 const HEADLESS = process.env.PUPPETEER_HEADLESS !== "false";
 
 const OUTPUT_DIR = path.join(rootDir, "crawled-data");
-const OUTPUT_FILE = path.join(OUTPUT_DIR, "pages-dynamic.json");
-const PROGRESS_FILE = path.join(OUTPUT_DIR, "crawl-dynamic-progress.json");
+const OUTPUT_FILE = path.join(OUTPUT_DIR, "pages.json");
+const PROGRESS_FILE = path.join(OUTPUT_DIR, "crawl-progress.json");
+
+// URLs we never want this generic crawler to touch — they have a dedicated
+// crawler that captures their dynamic state properly.
+const SKIP_URL_PATTERNS = [
+  /^https?:\/\/(www\.)?upes\.ac\.in\/admissions\/fee-structure\/?$/i,
+];
 
 const FRESH = process.argv.includes("--fresh");
 
-// ─── Explicit URL list (used when CRAWL_MODE=urllist) ─────────────────────────
+// Manual list used when CRAWL_MODE=urllist.
 const MANUAL_URLS = ["https://www.upes.ac.in"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -107,7 +126,7 @@ function clearProgress() {
   if (fs.existsSync(PROGRESS_FILE)) fs.unlinkSync(PROGRESS_FILE);
 }
 
-// ─── Sitemap fetching (reused from crawl.js) ──────────────────────────────────
+// ─── Sitemap fetching ────────────────────────────────────────────────────────
 
 async function fetchWithRetry(
   url,
@@ -235,11 +254,10 @@ async function extractPageContent(page) {
       document.querySelector("#main-content") ||
       document.body;
 
-    // Tables → markdown-style text
     contentEl.querySelectorAll("table").forEach((table) => {
       const rows = [];
       let headerCount = 0;
-      table.querySelectorAll("tr").forEach((tr, idx) => {
+      table.querySelectorAll("tr").forEach((tr) => {
         const cells = [];
         const isHeader = tr.querySelectorAll("th").length > 0;
         tr.querySelectorAll("th, td").forEach((cell) => {
@@ -269,7 +287,6 @@ async function extractPageContent(page) {
       table.replaceWith(tableText);
     });
 
-    // Headings → markdown prefixes
     contentEl.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((heading) => {
       const level = parseInt(heading.tagName[1], 10);
       const prefix = "#".repeat(level);
@@ -300,7 +317,7 @@ async function extractPageContent(page) {
   }, MAX_TEXT_LENGTH);
 }
 
-async function scrapeDynamicPage(browser, url) {
+async function scrapeWithBrowser(browser, url) {
   const page = await browser.newPage();
   try {
     await page.setViewport({ width: 1920, height: 1080 });
@@ -333,6 +350,28 @@ async function scrapeDynamicPage(browser, url) {
   }
 }
 
+/**
+ * One-shot scraper for callers that want a single page (e.g. reindexPage.js).
+ * Launches its own short-lived browser.
+ */
+export async function scrapeSinglePage(url) {
+  const browser = await puppeteer.launch({
+    headless: HEADLESS,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--disable-gpu",
+    ],
+  });
+  try {
+    return await scrapeWithBrowser(browser, url);
+  } finally {
+    await browser.close();
+  }
+}
+
 // ─── Content Dedup ────────────────────────────────────────────────────────────
 
 function deduplicatePages(pages) {
@@ -354,15 +393,14 @@ function deduplicatePages(pages) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-async function crawlDynamicSitemap() {
+async function crawlSitemap() {
   if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  console.log(`\n🕷️  Dynamic Sitemap Crawler starting (Puppeteer)`);
+  console.log(`\n🕷️  Sitemap Crawler starting (Puppeteer)`);
   console.log(`   Mode: ${CRAWL_MODE.toUpperCase()}`);
   console.log(`   Max pages: ${MAX_PAGES}, Concurrency: ${CONCURRENCY}`);
   console.log(`   Headless: ${HEADLESS}\n`);
 
-  // ── Resolve target URLs ────────────────────────────────────────────────────
   let targetUrls = [];
 
   if (CRAWL_MODE === "sitemap") {
@@ -383,7 +421,16 @@ async function crawlDynamicSitemap() {
     );
     console.log(`   After route filter: ${afterRouteFilter.length}`);
 
-    targetUrls = afterRouteFilter.slice(0, MAX_PAGES);
+    const afterSkip = afterRouteFilter.filter(
+      (u) => !SKIP_URL_PATTERNS.some((p) => p.test(u)),
+    );
+    if (afterSkip.length !== afterRouteFilter.length) {
+      console.log(
+        `   After skip-list filter: ${afterSkip.length} (dropped ${afterRouteFilter.length - afterSkip.length} — fee-structure SPA is handled by crawl:fees)`,
+      );
+    }
+
+    targetUrls = afterSkip.slice(0, MAX_PAGES);
     console.log(
       `   After MAX_PAGES cap (${MAX_PAGES}): ${targetUrls.length}\n`,
     );
@@ -399,10 +446,8 @@ async function crawlDynamicSitemap() {
     process.exit(1);
   }
 
-  // Deduplicate URLs
   targetUrls = [...new Set(targetUrls.map((u) => u.replace(/\/$/, "")))];
 
-  // ── Load progress ──────────────────────────────────────────────────────────
   const progress = loadProgress();
   const alreadyCrawled = progress.crawledUrls;
   const pages = [...progress.pages];
@@ -428,7 +473,6 @@ async function crawlDynamicSitemap() {
     return;
   }
 
-  // ── Launch browser ─────────────────────────────────────────────────────────
   console.log("🚀 Launching browser...");
   const browser = await puppeteer.launch({
     headless: HEADLESS,
@@ -449,7 +493,7 @@ async function crawlDynamicSitemap() {
           const idx = alreadyCrawled.size + i + j + 1;
           const total = alreadyCrawled.size + remaining.length;
           console.log(`[${idx}/${total}] Scraping: ${url}`);
-          const page = await scrapeDynamicPage(browser, url);
+          const page = await scrapeWithBrowser(browser, url);
           if (page) {
             console.log(
               `   ✅ "${page.title.slice(0, 60)}" (${page.text.length} chars)`,
@@ -466,7 +510,6 @@ async function crawlDynamicSitemap() {
         if (page) pages.push(page);
       }
 
-      // Save progress after each batch
       saveProgress(alreadyCrawled, pages);
       console.log(
         `   💾 Progress saved (${alreadyCrawled.size}/${alreadyCrawled.size + remaining.length - i - batch.length} crawled)`,
@@ -490,7 +533,6 @@ async function crawlDynamicSitemap() {
   await browser.close();
   console.log("\n🔒 Browser closed");
 
-  // ── Finalize ───────────────────────────────────────────────────────────────
   const uniquePages = deduplicatePages(pages);
   if (uniquePages.length < pages.length) {
     console.log(
@@ -500,14 +542,23 @@ async function crawlDynamicSitemap() {
 
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(uniquePages, null, 2), "utf-8");
   console.log(
-    `\n✅ Dynamic crawl complete! ${uniquePages.length} pages saved to: ${OUTPUT_FILE}`,
+    `\n✅ Sitemap crawl complete! ${uniquePages.length} pages saved to: ${OUTPUT_FILE}`,
   );
-  console.log('   Run "npm run index" to upload to Upstash.\n');
+  console.log(
+    '   Tip: "npm run crawl:sitemap" also runs "npm run crawl:fees" automatically.\n',
+  );
 
   clearProgress();
 }
 
-crawlDynamicSitemap().catch((err) => {
-  console.error("Dynamic sitemap crawler failed:", err);
-  process.exit(1);
-});
+// Only run when invoked directly, not when imported (e.g. by reindexPage.js).
+const invokedDirectly =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith("crawlSitemap.js");
+
+if (invokedDirectly) {
+  crawlSitemap().catch((err) => {
+    console.error("Sitemap crawler failed:", err);
+    process.exit(1);
+  });
+}

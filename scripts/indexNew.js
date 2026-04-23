@@ -35,8 +35,9 @@ if (fs.existsSync(envPath)) {
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
-const DYNAMIC_INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages-dynamic.json');
+const SITEMAP_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
+const LIST_FILE = path.join(rootDir, 'crawled-data', 'pages-list.json');
+const FEES_FILE = path.join(rootDir, 'crawled-data', 'pages-fees.json');
 const PROGRESS_FILE = path.join(rootDir, 'crawled-data', 'index-progress.json');
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
@@ -70,25 +71,33 @@ function getIndexedUrls(indexedIds) {
 // ─── Indexer ──────────────────────────────────────────────────────────────────
 
 async function indexNew() {
-    if (!fs.existsSync(INPUT_FILE)) {
-        console.error(`❌  No crawled data found at: ${INPUT_FILE}`);
-        console.error('   Run "npm run crawl" first.');
+    const hasSitemap = fs.existsSync(SITEMAP_FILE);
+    const hasList = fs.existsSync(LIST_FILE);
+    const hasFees = fs.existsSync(FEES_FILE);
+
+    if (!hasSitemap && !hasList && !hasFees) {
+        console.error(`❌  No crawled data found.`);
+        console.error('   Run "npm run crawl:sitemap" first.');
         process.exit(1);
     }
 
-    const pages = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'));
-    
-    // Load dynamic pages if they exist
-    let dynamicPages = [];
-    if (fs.existsSync(DYNAMIC_INPUT_FILE)) {
-        dynamicPages = JSON.parse(fs.readFileSync(DYNAMIC_INPUT_FILE, 'utf-8'));
-    }
-    
-    // Combine static and dynamic pages
-    const allPages = [...pages, ...dynamicPages];
+    const sitemapPages = hasSitemap
+        ? JSON.parse(fs.readFileSync(SITEMAP_FILE, 'utf-8'))
+        : [];
+    const listPages = hasList
+        ? JSON.parse(fs.readFileSync(LIST_FILE, 'utf-8'))
+        : [];
+    const feePages = hasFees
+        ? JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8'))
+        : [];
+
+    // Fees first (smallest, freshest, most user-facing), then list, then sitemap.
+    // Keeps the highest-value content prioritised when Upstash's daily write
+    // quota is tight.
+    const allPages = [...feePages, ...listPages, ...sitemapPages];
 
     console.log(`\n📚  Indexing NEW pages only...`);
-    console.log(`   Total pages available: ${allPages.length} (${pages.length} static + ${dynamicPages.length} dynamic)`);
+    console.log(`   Total pages available: ${allPages.length} (${feePages.length} fee combos + ${listPages.length} list + ${sitemapPages.length} sitemap)`);
 
     // Get already indexed URLs
     const indexedIds = loadProgress();

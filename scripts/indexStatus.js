@@ -26,18 +26,33 @@ if (fs.existsSync(envPath)) {
     });
 }
 
-const PAGES_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
+const SITEMAP_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
+const LIST_FILE = path.join(rootDir, 'crawled-data', 'pages-list.json');
+const FEES_FILE = path.join(rootDir, 'crawled-data', 'pages-fees.json');
 const PROGRESS_FILE = path.join(rootDir, 'crawled-data', 'index-progress.json');
 
 async function status() {
     console.log('\n📊  Indexing Status\n');
 
     // Local crawled data
-    if (fs.existsSync(PAGES_FILE)) {
-        const pages = JSON.parse(fs.readFileSync(PAGES_FILE, 'utf-8'));
-        console.log(`   📄 Crawled pages (pages.json): ${pages.length}`);
+    const sitemapCount = fs.existsSync(SITEMAP_FILE)
+        ? JSON.parse(fs.readFileSync(SITEMAP_FILE, 'utf-8')).length
+        : 0;
+    const listCount = fs.existsSync(LIST_FILE)
+        ? JSON.parse(fs.readFileSync(LIST_FILE, 'utf-8')).length
+        : 0;
+    const feesCount = fs.existsSync(FEES_FILE)
+        ? JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8')).length
+        : 0;
+    const totalCrawled = sitemapCount + listCount + feesCount;
+
+    if (totalCrawled === 0) {
+        console.log('   📄 Crawled pages: none (run "npm run crawl:sitemap" first)');
     } else {
-        console.log('   📄 Crawled pages: none (run "npm run crawl" first)');
+        console.log(`   📄 Crawled pages: ${totalCrawled} total`);
+        console.log(`        • pages.json (sitemap):       ${sitemapCount}`);
+        console.log(`        • pages-list.json (LIST):     ${listCount}`);
+        console.log(`        • pages-fees.json (fee SPA):  ${feesCount}`);
     }
 
     // Progress file

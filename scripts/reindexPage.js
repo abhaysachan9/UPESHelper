@@ -11,7 +11,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { scrapePage } from './crawl.js';
+import { scrapeSinglePage } from './crawlSitemap.js';
 import { upsertChunks, deleteVectors } from '../server/services/vectorDb.js';
 import { chunkText } from '../server/utils/chunker.js';
 
@@ -46,10 +46,10 @@ async function reindexPage(url) {
     console.log(`\n🔄  Re-indexing single page: ${url}\n`);
 
     // Step 1: Re-crawl the page
-    console.log('   📡 Scraping page...');
-    const page = await scrapePage(url);
+    console.log('   📡 Scraping page (Puppeteer)...');
+    const page = await scrapeSinglePage(url);
     if (!page) {
-        console.error('   ❌ Could not scrape page (no content, error, or non-HTML).');
+        console.error('   ❌ Could not scrape page (no content, timeout, or error).');
         process.exit(1);
     }
     console.log(`   ✅ "${page.title.slice(0, 60)}" (${page.text.length} chars)`);

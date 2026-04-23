@@ -33,8 +33,12 @@ if (fs.existsSync(envPath)) {
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
-const DYNAMIC_INPUT_FILE = path.join(rootDir, 'crawled-data', 'pages-dynamic.json');
+// pages.json       — bulk sitemap crawl (npm run crawl:sitemap)
+// pages-list.json  — manually curated DYNAMIC_PAGES list (npm run crawl:dynamic)
+// pages-fees.json  — fee-structure SPA combinations (npm run crawl:fees)
+const SITEMAP_FILE = path.join(rootDir, 'crawled-data', 'pages.json');
+const LIST_FILE = path.join(rootDir, 'crawled-data', 'pages-list.json');
+const FEES_FILE = path.join(rootDir, 'crawled-data', 'pages-fees.json');
 const PROGRESS_FILE = path.join(rootDir, 'crawled-data', 'index-progress.json');
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
@@ -56,28 +60,38 @@ function clearProgress() {
 // ─── Indexer ──────────────────────────────────────────────────────────────────
 
 async function index() {
-    const hasStatic = fs.existsSync(INPUT_FILE);
-    const hasDynamic = fs.existsSync(DYNAMIC_INPUT_FILE);
+    const hasSitemap = fs.existsSync(SITEMAP_FILE);
+    const hasList = fs.existsSync(LIST_FILE);
+    const hasFees = fs.existsSync(FEES_FILE);
 
-    if (!hasStatic && !hasDynamic) {
+    if (!hasSitemap && !hasList && !hasFees) {
         console.error(`❌  No crawled data found.`);
-        console.error('   Run "npm run crawl" or "npm run crawl:dynamic:sitemap" first.');
+        console.error('   Run "npm run crawl:sitemap" (which also runs the fee crawl) first.');
         process.exit(1);
     }
 
-    const pages = hasStatic
-        ? JSON.parse(fs.readFileSync(INPUT_FILE, 'utf-8'))
+    const sitemapPages = hasSitemap
+        ? JSON.parse(fs.readFileSync(SITEMAP_FILE, 'utf-8'))
         : [];
 
-    const dynamicPages = hasDynamic
-        ? JSON.parse(fs.readFileSync(DYNAMIC_INPUT_FILE, 'utf-8'))
+    const listPages = hasList
+        ? JSON.parse(fs.readFileSync(LIST_FILE, 'utf-8'))
         : [];
 
-    if (hasStatic) console.log(`📄  Found ${pages.length} static pages`);
-    if (hasDynamic) console.log(`📄  Found ${dynamicPages.length} dynamic pages`);
+    const feePages = hasFees
+        ? JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8'))
+        : [];
 
-    const allPages = [...pages, ...dynamicPages];
-    console.log(`📄  Total pages to index: ${allPages.length} (${pages.length} static + ${dynamicPages.length} dynamic)`);
+    if (hasFees) console.log(`📄  Found ${feePages.length} fee combinations`);
+    if (hasList) console.log(`📄  Found ${listPages.length} list-mode pages`);
+    if (hasSitemap) console.log(`📄  Found ${sitemapPages.length} sitemap pages`);
+
+    // Order matters when the Upstash daily write quota may be hit mid-run.
+    // Fees go first because they are the smallest, freshest, and most
+    // user-facing set ("what's the fee for X?"). The curated list comes
+    // next, and the bulk sitemap crawl (often thousands of pages) last.
+    const allPages = [...feePages, ...listPages, ...sitemapPages];
+    console.log(`📄  Total pages to index: ${allPages.length} (${feePages.length} fee combos + ${listPages.length} list + ${sitemapPages.length} sitemap)`);
 
     // Build all chunks with page-level context prepended
     const allChunks = [];
