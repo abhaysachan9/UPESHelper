@@ -829,10 +829,6 @@ body:has(> .chat-view.active) {
 /* ── 9. Composer (pinned bottom) ───────────────────────────── */
 .composer {
   flex-shrink: 0;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
   padding: 0.5rem 1rem;
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   background: var(--bg);
@@ -934,15 +930,15 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 /* ── Floating Call FAB ──────────────────────────────────────── */
 .call-fab {
   position: fixed;
-  right: 16px;
-  bottom: calc(80px + env(safe-area-inset-bottom));
+  bottom: 6.5rem;
+  right: 1.25rem;
   z-index: 900;
   width: 3.25rem;
   height: 3.25rem;
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
@@ -1636,7 +1632,7 @@ body:has(> .landing:not(.hidden)) .composer-inner {
   }
 
   .call-fab {
-    bottom: calc(80px + env(safe-area-inset-bottom));
+    bottom: 5.5rem;
     right: 1rem;
     width: 3rem;
     height: 3rem;
@@ -1652,7 +1648,7 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 /* ── 15b. Floating Call FAB — Small screens ───────────────── */
 @media (max-width: 400px) {
   .call-fab {
-    bottom: calc(80px + env(safe-area-inset-bottom));
+    bottom: 5rem;
     right: 0.75rem;
     width: 2.75rem;
     height: 2.75rem;
@@ -1670,7 +1666,7 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 /* ── 15c. Floating Call FAB — Desktop ─────────────────────── */
 @media (min-width: 1024px) {
   .call-fab {
-    bottom: calc(80px + env(safe-area-inset-bottom));
+    bottom: 6.5rem;
     right: 2rem;
     width: 3.5rem;
     height: 3.5rem;
