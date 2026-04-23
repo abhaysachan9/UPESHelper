@@ -1648,7 +1648,7 @@ body:has(> .landing:not(.hidden)) .composer-inner {
 /* ── 15b. Floating Call FAB — Small screens ───────────────── */
 @media (max-width: 400px) {
   .call-fab {
-    bottom: 5rem;
+    bottom: 3rem;
     right: 0.75rem;
     width: 2.75rem;
     height: 2.75rem;
